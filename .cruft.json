@@ -1,0 +1,19 @@
+{
+  "template": "https://github.com/ecmwf-projects/cookiecutter-conda-package",
+  "commit": "3a76374333bdf30bf2d8b17ca8e684335e74f21b",
+  "checkout": null,
+  "context": {
+    "cookiecutter": {
+      "project_name": "pyIC",
+      "project_slug": "pyic",
+      "project_short_description": "Boilerplate to create a Python package based on conda-forge",
+      "copyright_holder": "NOC",
+      "copyright_year": "2024",
+      "mypy_strict": false,
+      "integration_tests": false,
+      "pypi": true,
+      "_template": "https://github.com/ecmwf-projects/cookiecutter-conda-package"
+    }
+  },
+  "directory": null
+}
