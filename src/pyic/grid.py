@@ -19,7 +19,7 @@ class GRID:
                 return var
         raise Exception(
             f"Missing variable name for {dimtype} in data set. I tried these {matches} already."
-         +f"Specify the variable name for {dimtype} explicitly using the 'ds_{dimtype[:3]}_name' argument."
+            + f"Specify the variable name for {dimtype} explicitly using the 'ds_{dimtype[:3]}_name' argument."
         )
 
     def extract_lonlat(self, lon_name=None, lat_name=None):
@@ -44,7 +44,12 @@ class GRID:
             lat_da = xr.DataArray(np.meshgrid(lat_da, lat_da), dims=["y", "x"])
         return lon_da, lat_da
 
-    def make_common_grid(self, lon_name, lat_name):
+    def make_common_coords(self, lon_name, lat_name):
+        """Put grid onto grid with lon and lat for coordinate names ready for regridding.
+
+        lon_name: given lon coordinate name
+        lat_name: given lat coordinate name
+        """
         ds_grid = self.ds.isel(time_counter=0).rename(
             {lon_name: "lon", lat_name: "lat"}
         )
@@ -61,13 +66,40 @@ class GRID:
                      If none, will be inferred from common ones.
         """
         self.data_filename = data_filename
-        self.lon_names = ["nav_lon"]
-        self.lat_names = ["nav_lat"]
+        self.lon_names = ["glamt,","x"]
+        self.lat_names = ["gphit","y"]
         self.ds = self.open_dataset(self.data_filename)
         self.lon, self.lat = self.extract_lonlat(ds_lon_name, ds_lat_name)
-        self.common_grid = self.make_common_grid(ds_lon_name, ds_lat_name)
+        self.common_grid = self.make_common_coords(ds_lon_name, ds_lat_name)
         self.coords = {"lon_name": ds_lon_name, "lat_name": ds_lat_name}
         # return self.ds,self.lat,self.lon
+
+    def is_superset_of(self,destination_grid,return_indices=True):
+        """Check if source grid is a superset of the destination grid
+        """
+        if self.common_grid['lat'].min()<=destination_grid.common_grid['lat'].min() or destination_grid.common_grid['lat'].min()<-89:
+            if self.common_grid['lat'].max()>=destination_grid.common_grid['lat'].max() or destination_grid.common_grid['lat'].max()>89:
+                if self.common_grid['lon'].min()<=destination_grid.common_grid['lon'].min() or destination_grid.common_grid['lon'].min()<-179:
+                    if self.common_grid['lon'].max()>=destination_grid.common_grid['lon'].max() or destination_grid.common_grid['lon'].max()>179:
+                        print('Source grid is a superset of destination grid.')
+                        if return_indices:
+                            return self.make_subset(destination_grid)
+                    else:
+                        raise Exception(f"Source not superset of destination: max longitude. {self.common_grid['lon'].max().values} < {destination_grid.common_grid['lon'].max().values}.")
+                else:
+                    raise Exception(f"Source not superset of destination: min longitude. {self.common_grid['lon'].min().values} > {destination_grid.common_grid['lon'].min().values}.")
+            else:
+                raise Exception(f"Source not superset of destination: max latitude. {self.common_grid['lat'].max().values} < {destination_grid.common_grid['lat'].max().values}.")
+        else:
+            raise Exception(f"Source not superset of destination: min latitude. {self.common_grid['lat'].min().values} > {destination_grid.common_grid['lat'].min().values}.")
+        
+        print('done')
+
+    def make_subset(self,destination_grid):
+        subset_lat_bool = (self.common_grid['lat'] > destination_grid.common_grid['lat'].min()) & (self.common_grid['lat'] < destination_grid.common_grid['lat'].max())
+        subset_lon_bool = (self.common_grid['lon'] > destination_grid.common_grid['lon'].min()) & (self.common_grid['lon'] < destination_grid.common_grid['lon'].max())
+        return subset_lat_bool,subset_lon_bool
+        return self.common_grid.isel([subset_lat_bool & subset_lon_bool])
 
     def regrid(
         self,
@@ -90,8 +122,8 @@ class GRID:
                         "path/to/weights.nc", otherwise ignored and weights will be calculated by xesmf.
         """
         regridder = xe.Regridder(
-            ds_in=self,
-            ds_out=destination_grid,
+            ds_in=self.common_grid,
+            ds_out=destination_grid.common_grid,
             method=regrid_algorithm,
             periodic=True,
             ignore_degenerate=True,
@@ -104,5 +136,8 @@ class GRID:
 
 
 if __name__ == "__main__":
-    src_grid = GRID("/projectsa/NEMO/joncon/pyIC_data/src_domain_cfg.nc")
-    dest_grid = GRID("/projectsa/NEMO/joncon/pyIC_data/dest_domain_cfg.nc")
+    src_grid = GRID("/projectsa/NEMO/joncon/pyIC_data/src_domain_cfg.nc",ds_lon_name = 'glamt', ds_lat_name = 'gphit')
+    dst_grid = GRID("/projectsa/NEMO/joncon/pyIC_data/dst_domain_cfg.nc",ds_lon_name="x",ds_lat_name="y")
+    a,b = src_grid.is_superset_of(dst_grid)
+    small = src_grid.common_grid.where(a&b)
+    #src_grid.regrid(dst_grid)
