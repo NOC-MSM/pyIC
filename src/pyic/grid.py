@@ -1,9 +1,9 @@
+import copy as cp
+import warnings
+
 import numpy as np
 import xarray as xr
 import xesmf as xe
-
-import copy as cp
-import warnings
 
 
 class GRID:
@@ -81,45 +81,37 @@ class GRID:
     def is_superset_of(self, destination_grid, return_indices=True):
         """Check if source grid is a superset of the destination grid"""
         if (
-            self.common_grid["lat"].min() <= destination_grid.common_grid["lat"].min()
-            or destination_grid.common_grid["lat"].min() < -89
+            self.common_grid["lat"].min() > destination_grid.common_grid["lat"].min()
+            and destination_grid.common_grid["lat"].min() > -89
         ):
-            if (
-                self.common_grid["lat"].max()
-                >= destination_grid.common_grid["lat"].max()
-                or destination_grid.common_grid["lat"].max() > 89
-            ):
-                if (
-                    self.common_grid["lon"].min()
-                    <= destination_grid.common_grid["lon"].min()
-                    or destination_grid.common_grid["lon"].min() < -179
-                ):
-                    if (
-                        self.common_grid["lon"].max()
-                        >= destination_grid.common_grid["lon"].max()
-                        or destination_grid.common_grid["lon"].max() > 179
-                    ):
-                        print("Source grid is a superset of destination grid.")
-                        if return_indices:
-                            return self.make_subset(destination_grid)
-                    else:
-                        raise Exception(
-                            f"Source not superset of destination: max longitude. {self.common_grid['lon'].max().values} < {destination_grid.common_grid['lon'].max().values}."
-                        )
-                else:
-                    raise Exception(
-                        f"Source not superset of destination: min longitude. {self.common_grid['lon'].min().values} > {destination_grid.common_grid['lon'].min().values}."
-                    )
-            else:
-                raise Exception(
-                    f"Source not superset of destination: max latitude. {self.common_grid['lat'].max().values} < {destination_grid.common_grid['lat'].max().values}."
-                )
-        else:
             raise Exception(
                 f"Source not superset of destination: min latitude. {self.common_grid['lat'].min().values} > {destination_grid.common_grid['lat'].min().values}."
             )
-
-        print("done")
+        elif (
+            self.common_grid["lat"].max() < destination_grid.common_grid["lat"].max()
+            and destination_grid.common_grid["lat"].max() < 89
+        ):
+            raise Exception(
+                f"Source not superset of destination: max latitude. {self.common_grid['lat'].max().values} < {destination_grid.common_grid['lat'].max().values}."
+            )
+        elif (
+            self.common_grid["lon"].min() > destination_grid.common_grid["lon"].min()
+            and destination_grid.common_grid["lon"].min() > -179
+        ):
+            raise Exception(
+                f"Source not superset of destination: min longitude. {self.common_grid['lon'].min().values} > {destination_grid.common_grid['lon'].min().values}."
+            )
+        elif (
+            self.common_grid["lon"].max() < destination_grid.common_grid["lon"].max()
+            and destination_grid.common_grid["lon"].max() < 179
+        ):
+            raise Exception(
+                f"Source not superset of destination: max longitude. {self.common_grid['lon'].max().values} < {destination_grid.common_grid['lon'].max().values}."
+            )
+        else:
+            print("Source grid is a superset of destination grid.")
+            if return_indices:
+                return self.make_subset(destination_grid)
 
     def make_subset(self, destination_grid):
         subset_lat_bool = (
@@ -128,9 +120,8 @@ class GRID:
         subset_lon_bool = (
             self.common_grid["lon"] > destination_grid.common_grid["lon"].min()
         ) & (self.common_grid["lon"] < destination_grid.common_grid["lon"].max())
-        self.inset = self.common_grid.where(subset_lat_bool&subset_lon_bool)
+        self.inset = self.common_grid.where(subset_lat_bool & subset_lon_bool)
         return self.inset
-        
 
     def regrid(
         self,
@@ -164,7 +155,6 @@ class GRID:
         if save_weights is not None:
             regridder.to_netcdf(save_weights)
         return regridder
-    
 
     def infill(arr_in, n_iter=None, bathy=None):
         """TODO: INTEGRATE WITH CLASS PROPERLY
@@ -178,10 +168,10 @@ class GRID:
             n_iter              (int): number of smoothing iterations
             bathy           (ndarray): bathymetry array (land set to zero)
 
-        Returns:
+        Returns
+        -------
             arr_mod         (ndarray): modified data array
         """
-
         # Check number of dims
         if arr_in.ndim != 2:
             raise ValueError("Array must have two dimensions")
@@ -191,34 +181,36 @@ class GRID:
             bathy = np.ones_like(arr_in, dtype=float)
         if n_iter is None:
             n_iter = np.inf
-        ind = np.where(np.logical_and(np.isnan(arr_in), np.greater(bathy, 0.)))
+        ind = np.where(np.logical_and(np.isnan(arr_in), np.greater(bathy, 0.0)))
         counter = 0
         jpj, jpi = arr_in.shape
         # Infill until all NaNs are removed or N interations completed
-        while np.sum(ind)>0 and counter<n_iter:
-
+        while np.sum(ind) > 0 and counter < n_iter:
             # TODO: include a check to see if number of NaNs is decreasing
 
             # Create indices of neighbouring points
-            ind_e = cp.deepcopy(ind); ind_w = cp.deepcopy(ind)
-            ind_n = cp.deepcopy(ind); ind_s = cp.deepcopy(ind)
+            ind_e = cp.deepcopy(ind)
+            ind_w = cp.deepcopy(ind)
+            ind_n = cp.deepcopy(ind)
+            ind_s = cp.deepcopy(ind)
 
-            ind_e[1][:] = np.minimum(ind_e[1][:]+1, jpi-1)
-            ind_w[1][:] = np.maximum(ind_w[1][:]-1, 0    )
-            ind_n[0][:] = np.minimum(ind_n[0][:]+1, jpj-1)
-            ind_s[0][:] = np.maximum(ind_s[0][:]-1, 0    )
+            ind_e[1][:] = np.minimum(ind_e[1][:] + 1, jpi - 1)
+            ind_w[1][:] = np.maximum(ind_w[1][:] - 1, 0)
+            ind_n[0][:] = np.minimum(ind_n[0][:] + 1, jpj - 1)
+            ind_s[0][:] = np.maximum(ind_s[0][:] - 1, 0)
 
             # Replace NaNs
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore", category=RuntimeWarning)
-                arr_in[ind] = np.nanmean(np.vstack((arr_in[ind_e],
-                                                    arr_in[ind_w],
-                                                    arr_in[ind_n],
-                                                    arr_in[ind_s])), axis=0)
+                arr_in[ind] = np.nanmean(
+                    np.vstack(
+                        (arr_in[ind_e], arr_in[ind_w], arr_in[ind_n], arr_in[ind_s])
+                    ),
+                    axis=0,
+                )
 
             # Find new indices for next loop
-            ind = np.where(np.logical_and(np.isnan(arr_in),
-                                        np.greater(bathy, 0.)))
+            ind = np.where(np.logical_and(np.isnan(arr_in), np.greater(bathy, 0.0)))
             counter += 1
 
         return arr_in
