@@ -52,10 +52,16 @@ class GRID:
         lon_name: given lon coordinate name
         lat_name: given lat coordinate name
         """
-        ds_grid = self.ds.isel(time_counter=0).rename(
+        if 'time_counter' in self.ds:
+            ds_grid = self.ds.isel(time_counter=0).rename(
             {lon_name: "lon", lat_name: "lat"}
-        )
+            )
+        else:
+            ds_grid = self.ds.rename({lon_name: "lon", lat_name: "lat"})
+        ds_grid['lat'] = ds_grid['lat'].assign_attrs(units='degrees_north',standard_name='latitude')
+        ds_grid['lon'] = ds_grid['lon'].assign_attrs(units='degrees_east',standard_name='longitude')
         ds_grid = ds_grid.set_coords(("lat", "lon"))
+        ds_grid = ds_grid.cf.add_bounds(keys=['lon','lat'])
         return ds_grid
 
     def __init__(self, data_filename=None, ds_lon_name=None, ds_lat_name=None):
@@ -76,51 +82,6 @@ class GRID:
         self.coords = {"lon_name": ds_lon_name, "lat_name": ds_lat_name}
         self.inset = None
         # return self.ds,self.lat,self.lon
-
-    def is_superset_of(self, destination_grid, return_indices=True):
-        """Check if source grid is a superset of the destination grid"""
-        if (
-            self.common_grid["lat"].min() > destination_grid.common_grid["lat"].min()
-            and destination_grid.common_grid["lat"].min() > -89
-        ):
-            raise Exception(
-                f"Source not superset of destination: min latitude. {self.common_grid['lat'].min().values} > {destination_grid.common_grid['lat'].min().values}."
-            )
-        elif (
-            self.common_grid["lat"].max() < destination_grid.common_grid["lat"].max()
-            and destination_grid.common_grid["lat"].max() < 89
-        ):
-            raise Exception(
-                f"Source not superset of destination: max latitude. {self.common_grid['lat'].max().values} < {destination_grid.common_grid['lat'].max().values}."
-            )
-        elif (
-            self.common_grid["lon"].min() > destination_grid.common_grid["lon"].min()
-            and destination_grid.common_grid["lon"].min() > -179
-        ):
-            raise Exception(
-                f"Source not superset of destination: min longitude. {self.common_grid['lon'].min().values} > {destination_grid.common_grid['lon'].min().values}."
-            )
-        elif (
-            self.common_grid["lon"].max() < destination_grid.common_grid["lon"].max()
-            and destination_grid.common_grid["lon"].max() < 179
-        ):
-            raise Exception(
-                f"Source not superset of destination: max longitude. {self.common_grid['lon'].max().values} < {destination_grid.common_grid['lon'].max().values}."
-            )
-        else:
-            print("Source grid is a superset of destination grid.")
-            if return_indices:
-                return self.make_subset(destination_grid)
-
-    def make_subset(self, destination_grid):
-        subset_lat_bool = (
-            self.common_grid["lat"] > destination_grid.common_grid["lat"].min()
-        ) & (self.common_grid["lat"] < destination_grid.common_grid["lat"].max())
-        subset_lon_bool = (
-            self.common_grid["lon"] > destination_grid.common_grid["lon"].min()
-        ) & (self.common_grid["lon"] < destination_grid.common_grid["lon"].max())
-        self.inset = self.common_grid.where(subset_lat_bool & subset_lon_bool)
-        return self.inset
 
     def infill(arr_in, n_iter=None, bathy=None):
         """TODO: INTEGRATE WITH CLASS PROPERLY
@@ -180,17 +141,3 @@ class GRID:
             counter += 1
 
         return arr_in
-
-
-if __name__ == "__main__":
-    src_grid = GRID(
-        "/projectsa/NEMO/joncon/pyIC_data/src_domain_cfg.nc",
-        ds_lon_name="glamt",
-        ds_lat_name="gphit",
-    )
-    dst_grid = GRID(
-        "/projectsa/NEMO/joncon/pyIC_data/dst_domain_cfg.nc",
-        ds_lon_name="x",
-        ds_lat_name="y",
-    )
-    # src_grid.regrid(dst_grid)
