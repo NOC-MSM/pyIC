@@ -88,6 +88,7 @@ class GRID:
         self.common_grid = self.make_common_coords(ds_lon_name, ds_lat_name,ds_time_counter)
         self.coords = {"lon_name": ds_lon_name, "lat_name": ds_lat_name}
         self.inset = None
+        self.lon_bool, self.lat_bool = None, None
         # return self.ds,self.lat,self.lon
     
     def make_inset(self,inset_mask):
