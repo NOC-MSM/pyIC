@@ -2,9 +2,12 @@ from grid import GRID
 from regrid import is_superset_of, subset_mask, regrid_data, make_regridder
 
 if __name__ == "__main__":
-    src_grid = GRID("/gws/nopw/j04/jmmp/public/pyIC/src_domain_cfg.nc", ds_lon_name="nav_lon",ds_lat_name = "nav_lat")
-    dst_grid = GRID("/gws/nopw/j04/jmmp/public/pyIC/dst_domain_cfg.nc", ds_lon_name="glamt", ds_lat_name="gphit")
-    regrid1 = make_regridder(src_grid,dst_grid,regrid_algorithm="conservative",save_weights="regrid_weights_conservative.nc",
+    src_grid = GRID("/gws/nopw/j04/jmmp/public/pyIC/src_domain_cfg.nc", 
+                    ds_lon_name="nav_lon",ds_lat_name = "nav_lat")
+    dst_grid = GRID("/gws/nopw/j04/jmmp/public/pyIC/dst_domain_cfg.nc", 
+                    ds_lon_name="glamt", ds_lat_name="gphit")
+    regrid1 = make_regridder(src_grid,dst_grid,regrid_algorithm="conservative",
+                             save_weights="regrid_weights_conservative.nc",
                             force=True)
     src_data = GRID("/gws/nopw/j04/jmmp/public/pyIC/src_data.nc",ds_lon_name="nav_lon",ds_lat_name="nav_lat")
     subset_mask(src_data,dst_grid)

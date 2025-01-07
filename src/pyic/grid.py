@@ -21,7 +21,8 @@ class GRID:
                 return var
         raise Exception(
             f"Missing variable name for {dimtype} in data set. I tried these {matches} already."
-            + f" Specify the variable name for {dimtype} explicitly using the 'ds_{dimtype[:3]}_name' argument."
+            + f" Specify the variable name for {dimtype} explicitly using the"
+            + f"'ds_{dimtype[:3]}_name' argument."
         )
 
     def extract_lonlat(self, lon_name=None, lat_name=None):
@@ -67,7 +68,8 @@ class GRID:
         ds_grid = ds_grid.cf.add_bounds(keys=['lon','lat'])
         return ds_grid
 
-    def __init__(self, data_filename=None, ds_lon_name=None, ds_lat_name=None, ds_time_counter="time_counter"):
+    def __init__(self, data_filename=None, 
+                 ds_lon_name=None, ds_lat_name=None, ds_time_counter="time_counter"):
         """Initialise the class.
 
         data_filename: path to a data set on the desired grid.
@@ -98,6 +100,7 @@ class GRID:
 
     def infill(arr_in, n_iter=None, bathy=None):
         """TODO: INTEGRATE WITH CLASS PROPERLY
+        
         Returns data with any NaNs replaced by iteratively taking the geometric
         mean of surrounding points until all NaNs are removed or n_inter-ations
         have been performed. Input data must be 2D and can include a

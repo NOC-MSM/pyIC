@@ -1,4 +1,4 @@
-"""Group of functions to regrid GRIDs to other variations"""
+"""Group of functions to regrid GRIDs to other variations."""
 
 import xarray as xr
 import xesmf as xe
@@ -8,7 +8,7 @@ def make_subset_and_mask(source_grid,destination_grid):
     make_subset(source_grid,lonm,latm)
 
 def subset_mask(source_grid, destination_grid,return_masks=False):
-    """make subset of source_grid that covers same area as destination_grid
+    """Make subset of source_grid that covers same area as destination_grid.
 
     source_grid; destination_grid: instances of the GRID class.        
     """
@@ -42,7 +42,7 @@ def make_subset(source_grid, subset_lon_bool=None, subset_lat_bool=None):
     return source_grid.inset
 
 def is_superset_of(source_grid, destination_grid, return_indices=True, tolerance=0):
-        """Check if source grid is a superset of the destination grid
+        """Check if source grid is a superset of the destination grid.
         
         use min/max lat,lon to check if the dest grid is fully contained by the source grid.
         source_grid, destination_grid instances of the GRID class
@@ -54,28 +54,32 @@ def is_superset_of(source_grid, destination_grid, return_indices=True, tolerance
             and destination_grid.common_grid["lat"].min() > -89
         ):
             raise Exception(
-                f"Source not superset of destination: min latitude. {source_grid.common_grid['lat'].min().values} > {destination_grid.common_grid['lat'].min().values}."
+                f"Source not superset of destination: min latitude. {source_grid.common_grid['lat'].min().values} "
+                + f"> {destination_grid.common_grid['lat'].min().values}."
             )
         elif (
             source_grid.common_grid["lat"].max() + tolerance < destination_grid.common_grid["lat"].max()
             and destination_grid.common_grid["lat"].max() < 89
         ):
             raise Exception(
-                f"Source not superset of destination: max latitude. {source_grid.common_grid['lat'].max().values} < {destination_grid.common_grid['lat'].max().values}."
+                f"Source not superset of destination: max latitude. {source_grid.common_grid['lat'].max().values} "
+                + f"< {destination_grid.common_grid['lat'].max().values}."
             )
         elif (
             source_grid.common_grid["lon"].min() - tolerance > destination_grid.common_grid["lon"].min()
             and destination_grid.common_grid["lon"].min() > -179
         ):
             raise Exception(
-                f"Source not superset of destination: min longitude. {source_grid.common_grid['lon'].min().values} > {destination_grid.common_grid['lon'].min().values}."
+                f"Source not superset of destination: min longitude. {source_grid.common_grid['lon'].min().values} "
+                + f"> {destination_grid.common_grid['lon'].min().values}."
             )
         elif (
             source_grid.common_grid["lon"].max() + tolerance < destination_grid.common_grid["lon"].max()
             and destination_grid.common_grid["lon"].max() < 179
         ):
             raise Exception(
-                f"Source not superset of destination: max longitude. {source_grid.common_grid['lon'].max().values} < {destination_grid.common_grid['lon'].max().values}."
+                f"Source not superset of destination: max longitude. {source_grid.common_grid['lon'].max().values} "
+                + f"< {destination_grid.common_grid['lon'].max().values}."
             )
         else:
             print("Source grid is a superset of destination grid.")
