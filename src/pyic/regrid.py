@@ -54,32 +54,36 @@ def is_superset_of(source_grid, destination_grid, return_indices=True, tolerance
             and destination_grid.common_grid["lat"].min() > -89
         ):
             raise Exception(
-                f"Source not superset of destination: min latitude. {source_grid.common_grid['lat'].min().values} "
-                + f"> {destination_grid.common_grid['lat'].min().values}."
+                "Source not superset of destination: min latitude. "
+                + f"{source_grid.common_grid['lat'].min().values} > "
+                + f"{destination_grid.common_grid['lat'].min().values}."
             )
         elif (
             source_grid.common_grid["lat"].max() + tolerance < destination_grid.common_grid["lat"].max()
             and destination_grid.common_grid["lat"].max() < 89
         ):
             raise Exception(
-                f"Source not superset of destination: max latitude. {source_grid.common_grid['lat'].max().values} "
-                + f"< {destination_grid.common_grid['lat'].max().values}."
+                "Source not superset of destination: max latitude. "
+                + f"{source_grid.common_grid['lat'].max().values} < "
+                + f"{destination_grid.common_grid['lat'].max().values}."
             )
         elif (
             source_grid.common_grid["lon"].min() - tolerance > destination_grid.common_grid["lon"].min()
             and destination_grid.common_grid["lon"].min() > -179
         ):
             raise Exception(
-                f"Source not superset of destination: min longitude. {source_grid.common_grid['lon'].min().values} "
-                + f"> {destination_grid.common_grid['lon'].min().values}."
+                "Source not superset of destination: min longitude. "
+                + f"{source_grid.common_grid['lon'].min().values} > "
+                + f"{destination_grid.common_grid['lon'].min().values}."
             )
         elif (
             source_grid.common_grid["lon"].max() + tolerance < destination_grid.common_grid["lon"].max()
             and destination_grid.common_grid["lon"].max() < 179
         ):
             raise Exception(
-                f"Source not superset of destination: max longitude. {source_grid.common_grid['lon'].max().values} "
-                + f"< {destination_grid.common_grid['lon'].max().values}."
+                "Source not superset of destination: max longitude. "
+                + f"{source_grid.common_grid['lon'].max().values} < "
+                + f"{destination_grid.common_grid['lon'].max().values}."
             )
         else:
             print("Source grid is a superset of destination grid.")

@@ -99,8 +99,8 @@ class GRID:
         self.inset = in1
 
     def infill(arr_in, n_iter=None, bathy=None):
-        """TODO: INTEGRATE WITH CLASS PROPERLY
-        
+        """TODO: INTEGRATE WITH CLASS PROPERLY.
+
         Returns data with any NaNs replaced by iteratively taking the geometric
         mean of surrounding points until all NaNs are removed or n_inter-ations
         have been performed. Input data must be 2D and can include a
