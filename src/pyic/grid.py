@@ -21,7 +21,8 @@ class GRID:
                 return var
         raise Exception(
             f"Missing variable name for {dimtype} in data set. I tried these {matches} already."
-            + f"Specify the variable name for {dimtype} explicitly using the 'ds_{dimtype[:3]}_name' argument."
+            + f" Specify the variable name for {dimtype} explicitly using the"
+            + f"'ds_{dimtype[:3]}_name' argument."
         )
 
     def extract_lonlat(self, lon_name=None, lat_name=None):
@@ -31,34 +32,44 @@ class GRID:
             else:
                 raise Exception(f"{lon_name} not in given data set.")
         else:
-            lon_da = self.ds[self.get_dim_varname("longitude")]
+            lon_name = self.get_dim_varname("longitude")
+            lon_da = self.ds[lon_name]
         if lat_name is not None:
             if lat_name in self.ds:
                 lat_da = self.ds[lat_name]
             else:
                 raise Exception(f"{lat_name} not in given data set.")
         else:
-            lat_da = self.ds[self.get_dim_varname("latitude")]
+            lat_name = self.get_dim_varname("latitude")
+            lat_da = self.ds[lat_name]
 
         if len(lon_da.shape) == 1:
             lon_da = xr.DataArray(np.meshgrid(lon_da, lon_da), dims=["y", "x"])
         if len(lat_da.shape) == 1:
             lat_da = xr.DataArray(np.meshgrid(lat_da, lat_da), dims=["y", "x"])
-        return lon_da, lat_da
+        return lon_da, lat_da, lon_name, lat_name
 
-    def make_common_coords(self, lon_name, lat_name):
+    def make_common_coords(self, lon_name, lat_name, time_counter='time_counter'):
         """Put grid onto grid with lon and lat for coordinate names ready for regridding.
 
         lon_name: given lon coordinate name
         lat_name: given lat coordinate name
         """
-        ds_grid = self.ds.isel(time_counter=0).rename(
+        if time_counter in self.ds:
+            print('hello')
+            ds_grid = self.ds.isel({time_counter:0}).rename(
             {lon_name: "lon", lat_name: "lat"}
-        )
+            )
+        else:
+            ds_grid = self.ds.rename({lon_name: "lon", lat_name: "lat"})
+        ds_grid['lat'] = ds_grid['lat'].assign_attrs(units='degrees_north',standard_name='latitude')
+        ds_grid['lon'] = ds_grid['lon'].assign_attrs(units='degrees_east',standard_name='longitude')
         ds_grid = ds_grid.set_coords(("lat", "lon"))
+        ds_grid = ds_grid.cf.add_bounds(keys=['lon','lat'])
         return ds_grid
 
-    def __init__(self, data_filename=None, ds_lon_name=None, ds_lat_name=None):
+    def __init__(self, data_filename=None, 
+                 ds_lon_name=None, ds_lat_name=None, ds_time_counter="time_counter"):
         """Initialise the class.
 
         data_filename: path to a data set on the desired grid.
@@ -66,64 +77,30 @@ class GRID:
                      If none, will be inferred from common ones.
         ds_lat_name: optional, the name in the data set of the latitude variable.
                      If none, will be inferred from common ones.
+        ds_time_counter: optional, the name in the data set of the time_counter variable.
+                     If none, will be inferred from common ones.
         """
         self.data_filename = data_filename
-        self.lon_names = ["glamt,", "x"]
-        self.lat_names = ["gphit", "y"]
+        self.lon_names = ["glamt,", "x", "nav_lon"]
+        self.lat_names = ["gphit", "y", "nav_lat"]
         self.ds = self.open_dataset(self.data_filename)
-        self.lon, self.lat = self.extract_lonlat(ds_lon_name, ds_lat_name)
-        self.common_grid = self.make_common_coords(ds_lon_name, ds_lat_name)
+        self.lon, self.lat, ds_lon_name, ds_lat_name = self.extract_lonlat(ds_lon_name, ds_lat_name)
+        self.common_grid = self.make_common_coords(ds_lon_name, ds_lat_name,ds_time_counter)
         self.coords = {"lon_name": ds_lon_name, "lat_name": ds_lat_name}
         self.inset = None
         # return self.ds,self.lat,self.lon
-
-    def is_superset_of(self, destination_grid, return_indices=True):
-        """Check if source grid is a superset of the destination grid"""
-        if (
-            self.common_grid["lat"].min() > destination_grid.common_grid["lat"].min()
-            and destination_grid.common_grid["lat"].min() > -89
-        ):
-            raise Exception(
-                f"Source not superset of destination: min latitude. {self.common_grid['lat'].min().values} > {destination_grid.common_grid['lat'].min().values}."
-            )
-        elif (
-            self.common_grid["lat"].max() < destination_grid.common_grid["lat"].max()
-            and destination_grid.common_grid["lat"].max() < 89
-        ):
-            raise Exception(
-                f"Source not superset of destination: max latitude. {self.common_grid['lat'].max().values} < {destination_grid.common_grid['lat'].max().values}."
-            )
-        elif (
-            self.common_grid["lon"].min() > destination_grid.common_grid["lon"].min()
-            and destination_grid.common_grid["lon"].min() > -179
-        ):
-            raise Exception(
-                f"Source not superset of destination: min longitude. {self.common_grid['lon'].min().values} > {destination_grid.common_grid['lon'].min().values}."
-            )
-        elif (
-            self.common_grid["lon"].max() < destination_grid.common_grid["lon"].max()
-            and destination_grid.common_grid["lon"].max() < 179
-        ):
-            raise Exception(
-                f"Source not superset of destination: max longitude. {self.common_grid['lon'].max().values} < {destination_grid.common_grid['lon'].max().values}."
-            )
-        else:
-            print("Source grid is a superset of destination grid.")
-            if return_indices:
-                return self.make_subset(destination_grid)
-
-    def make_subset(self, destination_grid):
-        subset_lat_bool = (
-            self.common_grid["lat"] > destination_grid.common_grid["lat"].min()
-        ) & (self.common_grid["lat"] < destination_grid.common_grid["lat"].max())
-        subset_lon_bool = (
-            self.common_grid["lon"] > destination_grid.common_grid["lon"].min()
-        ) & (self.common_grid["lon"] < destination_grid.common_grid["lon"].max())
-        self.inset = self.common_grid.where(subset_lat_bool & subset_lon_bool)
-        return self.inset
+    
+    def make_inset(self,inset_mask):
+        in1 = xr.Dataset()
+        for var in self.common_grid:
+             print(self.common_grid.var.shape,inset_mask[var].shape)
+             in1[var] = self.common_grid[var].where(inset_mask[var].notnull(), drop=True)
+        in1 = in1.cf.add_bounds(keys=['lon','lat'])
+        self.inset = in1
 
     def infill(arr_in, n_iter=None, bathy=None):
-        """TODO: INTEGRATE WITH CLASS PROPERLY
+        """TODO: INTEGRATE WITH CLASS PROPERLY.
+
         Returns data with any NaNs replaced by iteratively taking the geometric
         mean of surrounding points until all NaNs are removed or n_inter-ations
         have been performed. Input data must be 2D and can include a
@@ -180,17 +157,3 @@ class GRID:
             counter += 1
 
         return arr_in
-
-
-if __name__ == "__main__":
-    src_grid = GRID(
-        "/projectsa/NEMO/joncon/pyIC_data/src_domain_cfg.nc",
-        ds_lon_name="glamt",
-        ds_lat_name="gphit",
-    )
-    dst_grid = GRID(
-        "/projectsa/NEMO/joncon/pyIC_data/dst_domain_cfg.nc",
-        ds_lon_name="x",
-        ds_lat_name="y",
-    )
-    # src_grid.regrid(dst_grid)
