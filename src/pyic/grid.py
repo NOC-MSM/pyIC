@@ -21,7 +21,7 @@ class GRID:
                 return var
         raise Exception(
             f"Missing variable name for {dimtype} in data set. I tried these {matches} already."
-            + f"Specify the variable name for {dimtype} explicitly using the 'ds_{dimtype[:3]}_name' argument."
+            + f" Specify the variable name for {dimtype} explicitly using the 'ds_{dimtype[:3]}_name' argument."
         )
 
     def extract_lonlat(self, lon_name=None, lat_name=None):
@@ -31,29 +31,32 @@ class GRID:
             else:
                 raise Exception(f"{lon_name} not in given data set.")
         else:
-            lon_da = self.ds[self.get_dim_varname("longitude")]
+            lon_name = self.get_dim_varname("longitude")
+            lon_da = self.ds[lon_name]
         if lat_name is not None:
             if lat_name in self.ds:
                 lat_da = self.ds[lat_name]
             else:
                 raise Exception(f"{lat_name} not in given data set.")
         else:
-            lat_da = self.ds[self.get_dim_varname("latitude")]
+            lat_name = self.get_dim_varname("latitude")
+            lat_da = self.ds[lat_name]
 
         if len(lon_da.shape) == 1:
             lon_da = xr.DataArray(np.meshgrid(lon_da, lon_da), dims=["y", "x"])
         if len(lat_da.shape) == 1:
             lat_da = xr.DataArray(np.meshgrid(lat_da, lat_da), dims=["y", "x"])
-        return lon_da, lat_da
+        return lon_da, lat_da, lon_name, lat_name
 
-    def make_common_coords(self, lon_name, lat_name):
+    def make_common_coords(self, lon_name, lat_name, time_counter='time_counter'):
         """Put grid onto grid with lon and lat for coordinate names ready for regridding.
 
         lon_name: given lon coordinate name
         lat_name: given lat coordinate name
         """
-        if 'time_counter' in self.ds:
-            ds_grid = self.ds.isel(time_counter=0).rename(
+        if time_counter in self.ds:
+            print('hello')
+            ds_grid = self.ds.isel({time_counter:0}).rename(
             {lon_name: "lon", lat_name: "lat"}
             )
         else:
@@ -64,7 +67,7 @@ class GRID:
         ds_grid = ds_grid.cf.add_bounds(keys=['lon','lat'])
         return ds_grid
 
-    def __init__(self, data_filename=None, ds_lon_name=None, ds_lat_name=None):
+    def __init__(self, data_filename=None, ds_lon_name=None, ds_lat_name=None, ds_time_counter="time_counter"):
         """Initialise the class.
 
         data_filename: path to a data set on the desired grid.
@@ -72,16 +75,26 @@ class GRID:
                      If none, will be inferred from common ones.
         ds_lat_name: optional, the name in the data set of the latitude variable.
                      If none, will be inferred from common ones.
+        ds_time_counter: optional, the name in the data set of the time_counter variable.
+                     If none, will be inferred from common ones.
         """
         self.data_filename = data_filename
-        self.lon_names = ["glamt,", "x"]
-        self.lat_names = ["gphit", "y"]
+        self.lon_names = ["glamt,", "x", "nav_lon"]
+        self.lat_names = ["gphit", "y", "nav_lat"]
         self.ds = self.open_dataset(self.data_filename)
-        self.lon, self.lat = self.extract_lonlat(ds_lon_name, ds_lat_name)
-        self.common_grid = self.make_common_coords(ds_lon_name, ds_lat_name)
+        self.lon, self.lat, ds_lon_name, ds_lat_name = self.extract_lonlat(ds_lon_name, ds_lat_name)
+        self.common_grid = self.make_common_coords(ds_lon_name, ds_lat_name,ds_time_counter)
         self.coords = {"lon_name": ds_lon_name, "lat_name": ds_lat_name}
         self.inset = None
         # return self.ds,self.lat,self.lon
+    
+    def make_inset(self,inset_mask):
+        in1 = xr.Dataset()
+        for var in self.common_grid:
+             print(self.common_grid.var.shape,inset_mask[var].shape)
+             in1[var] = self.common_grid[var].where(inset_mask[var].notnull(), drop=True)
+        in1 = in1.cf.add_bounds(keys=['lon','lat'])
+        self.inset = in1
 
     def infill(arr_in, n_iter=None, bathy=None):
         """TODO: INTEGRATE WITH CLASS PROPERLY
