@@ -56,7 +56,6 @@ class GRID:
         lat_name: given lat coordinate name
         """
         if time_counter in self.ds:
-            print('hello')
             ds_grid = self.ds.isel({time_counter:0}).rename(
             {lon_name: "lon", lat_name: "lat"}
             )
