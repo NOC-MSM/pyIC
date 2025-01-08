@@ -49,26 +49,35 @@ class GRID:
             lat_da = xr.DataArray(np.meshgrid(lat_da, lat_da), dims=["y", "x"])
         return lon_da, lat_da, lon_name, lat_name
 
-    def make_common_coords(self, lon_name, lat_name, time_counter='time_counter'):
+    def make_common_coords(self, lon_name, lat_name, time_counter="time_counter"):
         """Put grid onto grid with lon and lat for coordinate names ready for regridding.
 
         lon_name: given lon coordinate name
         lat_name: given lat coordinate name
         """
         if time_counter in self.ds:
-            ds_grid = self.ds.isel({time_counter:0}).rename(
-            {lon_name: "lon", lat_name: "lat"}
+            ds_grid = self.ds.isel({time_counter: 0}).rename(
+                {lon_name: "lon", lat_name: "lat"}
             )
         else:
             ds_grid = self.ds.rename({lon_name: "lon", lat_name: "lat"})
-        ds_grid['lat'] = ds_grid['lat'].assign_attrs(units='degrees_north',standard_name='latitude')
-        ds_grid['lon'] = ds_grid['lon'].assign_attrs(units='degrees_east',standard_name='longitude')
+        ds_grid["lat"] = ds_grid["lat"].assign_attrs(
+            units="degrees_north", standard_name="latitude"
+        )
+        ds_grid["lon"] = ds_grid["lon"].assign_attrs(
+            units="degrees_east", standard_name="longitude"
+        )
         ds_grid = ds_grid.set_coords(("lat", "lon"))
-        ds_grid = ds_grid.cf.add_bounds(keys=['lon','lat'])
+        ds_grid = ds_grid.cf.add_bounds(keys=["lon", "lat"])
         return ds_grid
 
-    def __init__(self, data_filename=None, 
-                 ds_lon_name=None, ds_lat_name=None, ds_time_counter="time_counter"):
+    def __init__(
+        self,
+        data_filename=None,
+        ds_lon_name=None,
+        ds_lat_name=None,
+        ds_time_counter="time_counter",
+    ):
         """Initialise the class.
 
         data_filename: path to a data set on the desired grid.
@@ -83,19 +92,23 @@ class GRID:
         self.lon_names = ["glamt,", "x", "nav_lon"]
         self.lat_names = ["gphit", "y", "nav_lat"]
         self.ds = self.open_dataset(self.data_filename)
-        self.lon, self.lat, ds_lon_name, ds_lat_name = self.extract_lonlat(ds_lon_name, ds_lat_name)
-        self.common_grid = self.make_common_coords(ds_lon_name, ds_lat_name,ds_time_counter)
+        self.lon, self.lat, ds_lon_name, ds_lat_name = self.extract_lonlat(
+            ds_lon_name, ds_lat_name
+        )
+        self.common_grid = self.make_common_coords(
+            ds_lon_name, ds_lat_name, ds_time_counter
+        )
         self.coords = {"lon_name": ds_lon_name, "lat_name": ds_lat_name}
         self.inset = None
         self.lon_bool, self.lat_bool = None, None
         # return self.ds,self.lat,self.lon
-    
-    def make_inset(self,inset_mask):
+
+    def make_inset(self, inset_mask):
         in1 = xr.Dataset()
         for var in self.common_grid:
-             print(self.common_grid.var.shape,inset_mask[var].shape)
-             in1[var] = self.common_grid[var].where(inset_mask[var].notnull(), drop=True)
-        in1 = in1.cf.add_bounds(keys=['lon','lat'])
+            print(self.common_grid.var.shape, inset_mask[var].shape)
+            in1[var] = self.common_grid[var].where(inset_mask[var].notnull(), drop=True)
+        in1 = in1.cf.add_bounds(keys=["lon", "lat"])
         self.inset = in1
 
     def infill(arr_in, n_iter=None, bathy=None):
