@@ -89,8 +89,8 @@ class GRID:
                      If none, will be inferred from common ones.
         """
         self.data_filename = data_filename
-        self.lon_names = ["glamt,", "x", "nav_lon"]
-        self.lat_names = ["gphit", "y", "nav_lat"]
+        self.lon_names = ["glamt,", "nav_lon"]
+        self.lat_names = ["gphit", "nav_lat"]
         self.ds = self.open_dataset(self.data_filename)
         self.lon, self.lat, ds_lon_name, ds_lat_name = self.extract_lonlat(
             ds_lon_name, ds_lat_name

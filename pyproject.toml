@@ -1,23 +1,68 @@
 [build-system]
-build-backend = "setuptools.build_meta"
-requires = ["setuptools>=64", "setuptools_scm>=8"]
+requires = ["setuptools>=45", "setuptools_scm[toml]>=6.2"]
+
+[options]
+install_requires = []
 
 [project]
+authors = [
+  {name = "James Harle", email = "jdha@noc.ac.uk"},
+  {name = "John Kazimierz Farey"},
+  {name = "Srikanth Nagella"},
+  {name = "Shirley Crompton"},
+  {name = "Tom Prime"}
+]
 classifiers = [
+  "License :: OSI Approved :: GPL License",
   "Development Status :: 2 - Pre-Alpha",
   "Intended Audience :: Science/Research",
-  "License :: OSI Approved :: Apache Software License",
-  "Operating System :: OS Independent",
+  "Intended Audience :: Developers",
+  "Topic :: Oceonography Modelling",
+  "Topic :: Scientific/Engineering",
   "Programming Language :: Python",
-  "Programming Language :: Python :: 3",
-  "Programming Language :: Python :: 3.11",
-  "Topic :: Scientific/Engineering"
+  "Programming Language :: Python :: 3.9"
 ]
-description = "Boilerplate to create a Python package based on conda-forge"
+dependencies = [
+  "netCDF4",
+  "numpy",
+  "xarray",
+  "xesmf"
+]
+description = "NEMO Regional Configuration Toolbox"
 dynamic = ["version"]
+keywords = [
+  "Oceanography",
+  "NEMO"
+]
 license = {file = "LICENSE"}
-name = "pyIC"
+name = "pyic"
 readme = "README.md"
+
+[project.optional-dependencies]
+dev = [
+  "mypy",
+  "commit"
+]
+docs = [
+  "sphinx",
+  "sphinx-autoapi",
+  "sphinx_rtd_theme",
+  "myst-parser",
+  "pydata-sphinx-theme"
+]
+tests = [
+  "pytest",
+  "pytest-cov"
+]
+
+[project.scripts]
+pyic = "pyic.pyic_exe:main"
+pyic_ncml_generator = "pyic.pyic_ncml_generator:main"
+pyic_settings_editor = "pyic.pyic_settings_editor:main"
+
+[project.urls]
+documentation = "https://pynemo.readthedocs.io/en/latest/"
+repository = "https://github.com/NOC-MSM/pyic"
 
 [tool.coverage.run]
 branch = true
@@ -26,15 +71,22 @@ branch = true
 strict = false
 
 [tool.ruff]
-# Same as Black.
-indent-width = 4
-line-length = 88
-
-[tool.ruff.lint]
 ignore = [
   # pydocstyle: Missing Docstrings
-  "D1"
+  "D1",
+  # pydocstyle: numpy convention
+  "D107",
+  "D203",
+  "D212",
+  "D213",
+  "D402",
+  "D413",
+  "D415",
+  "D416",
+  "D417"
 ]
+# Black line length is 88, but black does not format comments.
+line-length = 110
 select = [
   # pyflakes
   "F",
@@ -47,17 +99,18 @@ select = [
   "D"
 ]
 
-[tool.ruff.lint.pycodestyle]
-max-line-length = 110
+[tool.setuptools.package-data]
+gui = ["*.png", "*.ncml"]
+"pyic" = ["*.info"]
+"reader.jars" = ["*.jar"]
+share = ["epsg"]
 
-[tool.ruff.lint.pydocstyle]
-convention = "numpy"
-
-[tool.setuptools]
-packages = ["pyic"]
+[tool.setuptools.packages.find]
+namespaces = true
+where = ["src"]
 
 [tool.setuptools_scm]
-write_to = "pyic/version.py"
+write_to = "src/pyic/version.py"
 write_to_template = '''
 # Do not change! Do not track in version control!
 __version__ = "{version}"

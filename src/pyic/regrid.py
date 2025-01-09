@@ -37,7 +37,6 @@ def make_subset(source_grid, subset_lon_bool=None, subset_lat_bool=None):
     # source_grid.inset_mask.to_netcdf('/home/users/jdconey/inset.nc')
     in1 = xr.Dataset()
     for var in inset:
-        print(var)
         in1[var] = inset[var].where(inset[var].notnull(), drop=True)
     in1 = in1.cf.add_bounds(keys=["lon", "lat"])
     source_grid.inset = in1
