@@ -14,12 +14,12 @@ def subset_mask(source_grid, destination_grid, return_masks=False):
 
     source_grid; destination_grid: instances of the GRID class.
     """
-    subset_lat_bool = (
-        source_grid.common_grid["lat"] > destination_grid.common_grid["lat"].min()
-    ) & (source_grid.common_grid["lat"] < destination_grid.common_grid["lat"].max())
-    subset_lon_bool = (
-        source_grid.common_grid["lon"] > destination_grid.common_grid["lon"].min()
-    ) & (source_grid.common_grid["lon"] < destination_grid.common_grid["lon"].max())
+    subset_lat_bool = (source_grid.common_grid["lat"] > destination_grid.common_grid["lat"].min()) & (
+        source_grid.common_grid["lat"] < destination_grid.common_grid["lat"].max()
+    )
+    subset_lon_bool = (source_grid.common_grid["lon"] > destination_grid.common_grid["lon"].min()) & (
+        source_grid.common_grid["lon"] < destination_grid.common_grid["lon"].max()
+    )
     source_grid.lat_bool = subset_lat_bool
     source_grid.lon_bool = subset_lon_bool
     if return_masks:
@@ -52,8 +52,7 @@ def is_superset_of(source_grid, destination_grid, return_indices=True, tolerance
     tolerance: whether to add a tolerance when checking.
     """
     if (
-        source_grid.common_grid["lat"].min() - tolerance
-        > destination_grid.common_grid["lat"].min()
+        source_grid.common_grid["lat"].min() - tolerance > destination_grid.common_grid["lat"].min()
         and destination_grid.common_grid["lat"].min() > -89
     ):
         raise Exception(
@@ -62,8 +61,7 @@ def is_superset_of(source_grid, destination_grid, return_indices=True, tolerance
             + f"{destination_grid.common_grid['lat'].min().values}."
         )
     elif (
-        source_grid.common_grid["lat"].max() + tolerance
-        < destination_grid.common_grid["lat"].max()
+        source_grid.common_grid["lat"].max() + tolerance < destination_grid.common_grid["lat"].max()
         and destination_grid.common_grid["lat"].max() < 89
     ):
         raise Exception(
@@ -72,8 +70,7 @@ def is_superset_of(source_grid, destination_grid, return_indices=True, tolerance
             + f"{destination_grid.common_grid['lat'].max().values}."
         )
     elif (
-        source_grid.common_grid["lon"].min() - tolerance
-        > destination_grid.common_grid["lon"].min()
+        source_grid.common_grid["lon"].min() - tolerance > destination_grid.common_grid["lon"].min()
         and destination_grid.common_grid["lon"].min() > -179
     ):
         raise Exception(
@@ -82,8 +79,7 @@ def is_superset_of(source_grid, destination_grid, return_indices=True, tolerance
             + f"{destination_grid.common_grid['lon'].min().values}."
         )
     elif (
-        source_grid.common_grid["lon"].max() + tolerance
-        < destination_grid.common_grid["lon"].max()
+        source_grid.common_grid["lon"].max() + tolerance < destination_grid.common_grid["lon"].max()
         and destination_grid.common_grid["lon"].max() < 179
     ):
         raise Exception(
@@ -142,9 +138,7 @@ def make_regridder(
 def regrid_data(source_data, dest_grid=None, regridder=None):
     if regridder is None:
         if dest_grid is not None:
-            regridder = make_regridder(
-                source_data=source_data, destination_grid=dest_grid
-            )
+            regridder = make_regridder(source_data=source_data, destination_grid=dest_grid)
         else:
             raise Exception("provide at least one of dest_grid or regridder.")
     if source_data.inset is None:

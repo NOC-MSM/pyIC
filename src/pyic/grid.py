@@ -56,17 +56,11 @@ class GRID:
         lat_name: given lat coordinate name
         """
         if time_counter in self.ds:
-            ds_grid = self.ds.isel({time_counter: 0}).rename(
-                {lon_name: "lon", lat_name: "lat"}
-            )
+            ds_grid = self.ds.isel({time_counter: 0}).rename({lon_name: "lon", lat_name: "lat"})
         else:
             ds_grid = self.ds.rename({lon_name: "lon", lat_name: "lat"})
-        ds_grid["lat"] = ds_grid["lat"].assign_attrs(
-            units="degrees_north", standard_name="latitude"
-        )
-        ds_grid["lon"] = ds_grid["lon"].assign_attrs(
-            units="degrees_east", standard_name="longitude"
-        )
+        ds_grid["lat"] = ds_grid["lat"].assign_attrs(units="degrees_north", standard_name="latitude")
+        ds_grid["lon"] = ds_grid["lon"].assign_attrs(units="degrees_east", standard_name="longitude")
         ds_grid = ds_grid.set_coords(("lat", "lon"))
         ds_grid = ds_grid.cf.add_bounds(keys=["lon", "lat"])
         return ds_grid
@@ -92,12 +86,8 @@ class GRID:
         self.lon_names = ["glamt,", "nav_lon"]
         self.lat_names = ["gphit", "nav_lat"]
         self.ds = self.open_dataset(self.data_filename)
-        self.lon, self.lat, ds_lon_name, ds_lat_name = self.extract_lonlat(
-            ds_lon_name, ds_lat_name
-        )
-        self.common_grid = self.make_common_coords(
-            ds_lon_name, ds_lat_name, ds_time_counter
-        )
+        self.lon, self.lat, ds_lon_name, ds_lat_name = self.extract_lonlat(ds_lon_name, ds_lat_name)
+        self.common_grid = self.make_common_coords(ds_lon_name, ds_lat_name, ds_time_counter)
         self.coords = {"lon_name": ds_lon_name, "lat_name": ds_lat_name}
         self.inset = None
         self.lon_bool, self.lat_bool = None, None
@@ -159,9 +149,7 @@ class GRID:
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore", category=RuntimeWarning)
                 arr_in[ind] = np.nanmean(
-                    np.vstack(
-                        (arr_in[ind_e], arr_in[ind_w], arr_in[ind_n], arr_in[ind_s])
-                    ),
+                    np.vstack((arr_in[ind_e], arr_in[ind_w], arr_in[ind_n], arr_in[ind_s])),
                     axis=0,
                 )
 

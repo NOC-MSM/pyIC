@@ -38,7 +38,7 @@ autodoc_typehints = "none"
 
 # autoapi configuration
 autoapi_add_toctree_entry = False
-autoapi_dirs = ["../pyic"]
+autoapi_dirs = ["../src"]
 autoapi_ignore = ["*/version.py"]
 autoapi_member_order = "groupwise"
 autoapi_options = [
