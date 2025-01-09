@@ -57,7 +57,7 @@ pyic = "pyic.pyic_exe:main"
 
 [project.urls]
 documentation = "https://pynemo.readthedocs.io/en/latest/"
-repository = "https://github.com/NOC-MSM/pyic"
+repository = "https://github.com/NOC-MSM/pyIC"
 
 [tool.coverage.run]
 branch = true
@@ -66,7 +66,9 @@ branch = true
 strict = false
 
 [tool.ruff]
-ignore = [
+# Black line length is 88, but black does not format comments.
+line-length = 110
+lint.ignore = [
   # pydocstyle: Missing Docstrings
   "D1",
   # pydocstyle: numpy convention
@@ -80,9 +82,7 @@ ignore = [
   "D416",
   "D417"
 ]
-# Black line length is 88, but black does not format comments.
-line-length = 110
-select = [
+lint.select = [
   # pyflakes
   "F",
   # pycodestyle
