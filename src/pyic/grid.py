@@ -184,66 +184,60 @@ class GRID:
         in1 = in1.cf.add_bounds(keys=["lon", "lat"])
         self.inset = in1  # Store the created inset dataset
 
-    def infill(arr_in, n_iter=None, bathy=None):
-        """TODO Replace NaN values in 2D array by iteratively taking the geometric mean of surrounding points.
+def infill(arr_in, n_iter=None, bathy=None):
+        """TODO: INTEGRATE WITH CLASS PROPERLY.
 
-        This method continues until all NaNs are filled or a specified number of iterations is reached.
+        Returns data with any NaNs replaced by iteratively taking the geometric
+        mean of surrounding points until all NaNs are removed or n_inter-ations
+        have been performed. Input data must be 2D and can include a
+        bathymetry array as to provide land barriers to the infilling.
 
         Args:
-            arr_in (ndarray): Input 2D data array that may contain NaN values.
-            n_iter (int, optional): Maximum number of iterations to perform. If None, will run indefinitely
-                                    until all NaNs are filled.
+            arr_in          (ndarray): data array 2D
+            n_iter              (int): number of smoothing iterations
+            bathy           (ndarray): bathymetry array (land set to zero)
 
-            bathy (ndarray, optional): A 2D bathymetry array that indicates land barriers
-                                       (land areas should be set to zero).
-
-        Returns:
-            ndarray: The modified data array with NaN values replaced.
-
-        Raises:
-            ValueError: If the input array does not have two dimensions.
+        Returns
+        -------
+            arr_mod         (ndarray): modified data array
         """
-        # Check if the input array has two dimensions
+        # Check number of dims
         if arr_in.ndim != 2:
-            raise ValueError("Array must have two dimensions")  # Raise an error if not
+            raise ValueError("Array must have two dimensions")
 
-        # Initialize the bathymetry array if not provided
+        # Intial setup to prime things for the averaging loop
         if bathy is None:
-            bathy = np.ones_like(arr_in, dtype=float)  # Create a default bathymetry array of ones
+            bathy = np.ones_like(arr_in, dtype=float)
         if n_iter is None:
-            n_iter = np.inf  # Set to infinite iterations if not specified
-
-        # Find indices of NaN values in the input array where bathymetry is greater than zero
+            n_iter = np.inf
         ind = np.where(np.logical_and(np.isnan(arr_in), np.greater(bathy, 0.0)))
-        counter = 0  # Initialize a counter for the number of iterations
-        jpj, jpi = arr_in.shape  # Get the shape of the input array (number of rows and columns)
-
-        # Infill until all NaNs are removed or the maximum number of iterations is reached
+        counter = 0
+        jpj, jpi = arr_in.shape
+        # Infill until all NaNs are removed or N interations completed
         while np.sum(ind) > 0 and counter < n_iter:
-            # Create deep copies of the indices of NaN values for neighboring points
-            ind_e = cp.deepcopy(ind)  # Indices for the eastern neighbor
-            ind_w = cp.deepcopy(ind)  # Indices for the western neighbor
-            ind_n = cp.deepcopy(ind)  # Indices for the northern neighbor
-            ind_s = cp.deepcopy(ind)  # Indices for the southern neighbor
+            # TODO: include a check to see if number of NaNs is decreasing
 
-            # Update indices to point to neighboring cells, ensuring they stay within bounds
-            ind_e[1][:] = np.minimum(ind_e[1][:] + 1, jpi - 1)  # Move east
-            ind_w[1][:] = np.maximum(ind_w[1][:] - 1, 0)  # Move west
-            ind_n[0][:] = np.minimum(ind_n[0][:] + 1, jpj - 1)  # Move north
-            ind_s[0][:] = np.maximum(ind_s[0][:] - 1, 0)  # Move south
+            # Create indices of neighbouring points
+            ind_e = cp.deepcopy(ind)
+            ind_w = cp.deepcopy(ind)
+            ind_n = cp.deepcopy(ind)
+            ind_s = cp.deepcopy(ind)
 
-            # Replace NaN values in the input array with the mean of neighboring values
-            with warnings.catch_warnings():  # Suppress warnings during the operation
-                warnings.simplefilter("ignore", category=RuntimeWarning)  # Ignore runtime warnings
+            ind_e[1][:] = np.minimum(ind_e[1][:] + 1, jpi - 1)
+            ind_w[1][:] = np.maximum(ind_w[1][:] - 1, 0)
+            ind_n[0][:] = np.minimum(ind_n[0][:] + 1, jpj - 1)
+            ind_s[0][:] = np.maximum(ind_s[0][:] - 1, 0)
+
+            # Replace NaNs
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore", category=RuntimeWarning)
                 arr_in[ind] = np.nanmean(
-                    np.vstack(
-                        (arr_in[ind_e], arr_in[ind_w], arr_in[ind_n], arr_in[ind_s])
-                    ),  # Stack neighboring values
-                    axis=0,  # Calculate the mean along the vertical axis
+                    np.vstack((arr_in[ind_e], arr_in[ind_w], arr_in[ind_n], arr_in[ind_s])),
+                    axis=0,
                 )
 
-            # Find new indices of NaN values for the next iteration
+            # Find new indices for next loop
             ind = np.where(np.logical_and(np.isnan(arr_in), np.greater(bathy, 0.0)))
-            counter += 1  # Increment the iteration counter
+            counter += 1
 
-        return arr_in  # Return the modified array with NaN values filled
+        return arr_in
