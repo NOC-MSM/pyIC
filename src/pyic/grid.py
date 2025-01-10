@@ -1,8 +1,8 @@
-import copy as cp  # Import the copy module to create deep copies of objects
-import warnings  # Import the warnings module to manage warning messages
+import copy as cp
+import warnings
 
-import numpy as np  # Import NumPy for numerical operations and array handling
-import xarray as xr  # Import xarray for working with labeled multi-dimensional arrays
+import numpy as np
+import xarray as xr 
 
 
 class GRID:
@@ -32,14 +32,14 @@ class GRID:
             Exception: If the variable name for the specified dimension is not found in the dataset.
         """
         if dimtype == "longitude":
-            matches = self.lon_names  # Get potential names for longitude variables
+            matches = self.lon_names 
         elif dimtype == "latitude":
-            matches = self.lat_names  # Get potential names for latitude variables
+            matches = self.lat_names
 
         # Check if any of the potential names exist in the dataset
         for var in matches:
-            if var in self.ds:  # If a match is found
-                return var  # Return the found variable name
+            if var in self.ds:  
+                return var 
 
         # Raise an exception if no variable name is found
         raise Exception(

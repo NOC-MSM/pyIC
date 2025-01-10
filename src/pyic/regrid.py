@@ -1,7 +1,7 @@
 """Group of functions to regrid GRIDs to other variations."""
 
-import xarray as xr  # Import xarray for handling multi-dimensional arrays
-import xesmf as xe  # Import xesmf for regridding operations
+import xarray as xr 
+import xesmf as xe  
 
 
 def make_subset_and_mask(source_grid, destination_grid):
