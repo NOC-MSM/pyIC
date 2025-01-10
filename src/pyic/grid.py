@@ -6,7 +6,7 @@ import xarray as xr  # Import xarray for working with labeled multi-dimensional 
 
 
 class GRID:
-    """A class that provides methods to handle and regrid gridded datasets for NEMO (Nucleus for European Modelling of the Ocean)."""
+    """Class that provides methods to handle and regrid gridded datasets for NEMO."""
 
     def open_dataset(self, filename):
         """Open a dataset from a specified filename using xarray.
@@ -35,12 +35,12 @@ class GRID:
             matches = self.lon_names  # Get potential names for longitude variables
         elif dimtype == "latitude":
             matches = self.lat_names  # Get potential names for latitude variables
-        
+
         # Check if any of the potential names exist in the dataset
         for var in matches:
             if var in self.ds:  # If a match is found
                 return var  # Return the found variable name
-        
+
         # Raise an exception if no variable name is found
         raise Exception(
             f"Missing variable name for {dimtype} in data set. I tried these {matches} already."
@@ -57,7 +57,7 @@ class GRID:
 
         Returns:
             tuple: A tuple containing the longitude DataArray, latitude DataArray, and their respective names.
-        
+
         Raises:
             Exception: If the specified longitude or latitude variable is not found in the dataset.
         """
@@ -83,11 +83,20 @@ class GRID:
 
         # If longitude or latitude is 1D, create a meshgrid for 2D representation
         if len(lon_da.shape) == 1:
-            lon_da = xr.DataArray(np.meshgrid(lon_da, lon_da), dims=["y", "x"])  # Create a 2D meshgrid for longitude
+            lon_da = xr.DataArray(
+                np.meshgrid(lon_da, lon_da), dims=["y", "x"]
+            )  # Create a 2D meshgrid for longitude
         if len(lat_da.shape) == 1:
-            lat_da = xr.DataArray(np.meshgrid(lat_da, lat_da), dims=["y", "x"])  # Create a 2D meshgrid for latitude
-        
-        return lon_da, lat_da, lon_name, lat_name  # Return the longitude and latitude DataArrays and their names
+            lat_da = xr.DataArray(
+                np.meshgrid(lat_da, lat_da), dims=["y", "x"]
+            )  # Create a 2D meshgrid for latitude
+
+        return (
+            lon_da,
+            lat_da,
+            lon_name,
+            lat_name,
+        )  # Return the longitude and latitude DataArrays and their names
 
     def make_common_coords(self, lon_name, lat_name, time_counter="time_counter"):
         """Align the grid dataset with common coordinate names for regridding.
@@ -98,7 +107,6 @@ class GRID:
             time_counter (str, optional): The name of the time counter variable. Defaults to "time_counter".
 
         Returns:
-            xarray.Dataset: The dataset with standardized coordinate names and
             xarray.Dataset: The dataset with standardized coordinate names and attributes for regridding.
         """
         # Check if the time_counter variable exists in the dataset
@@ -108,17 +116,17 @@ class GRID:
         else:
             # If it doesn't exist, simply rename the longitude and latitude variables
             ds_grid = self.ds.rename({lon_name: "lon", lat_name: "lat"})
-        
+
         # Assign attributes to the latitude variable for clarity and standardization
         ds_grid["lat"] = ds_grid["lat"].assign_attrs(units="degrees_north", standard_name="latitude")
         # Assign attributes to the longitude variable for clarity and standardization
         ds_grid["lon"] = ds_grid["lon"].assign_attrs(units="degrees_east", standard_name="longitude")
-        
+
         # Set the latitude and longitude variables as coordinates in the dataset
         ds_grid = ds_grid.set_coords(("lat", "lon"))
         # Add bounds to the latitude and longitude coordinates for better spatial representation
         ds_grid = ds_grid.cf.add_bounds(keys=["lon", "lat"])
-        
+
         return ds_grid  # Return the modified dataset with common coordinates
 
     def __init__(
@@ -142,19 +150,19 @@ class GRID:
         self.data_filename = data_filename  # Store the path to the dataset file
         self.lon_names = ["glamt", "nav_lon"]  # List of potential longitude variable names
         self.lat_names = ["gphit", "nav_lat"]  # List of potential latitude variable names
-        
+
         # Open the dataset using the provided filename
         self.ds = self.open_dataset(self.data_filename)
-        
+
         # Extract longitude and latitude DataArrays and their names
         self.lon, self.lat, ds_lon_name, ds_lat_name = self.extract_lonlat(ds_lon_name, ds_lat_name)
-        
+
         # Create a common grid with standardized coordinate names
         self.common_grid = self.make_common_coords(ds_lon_name, ds_lat_name, ds_time_counter)
-        
+
         # Store the names of the longitude and latitude variables for later use
         self.coords = {"lon_name": ds_lon_name, "lat_name": ds_lat_name}
-        
+
         # Initialize additional attributes for later processing
         self.inset = None  # Placeholder for inset data
         self.lon_bool, self.lat_bool = None, None  # Boolean flags for longitude and latitude checks
@@ -166,26 +174,28 @@ class GRID:
             inset_mask (xarray.Dataset): A mask dataset that defines the area to be included in the inset.
         """
         in1 = xr.Dataset()  # Create an empty xarray Dataset for the inset
-        
+
         # Loop through each variable in the common grid
         for var in self.common_grid:
             # Create a new variable in the inset dataset, applying the mask to drop NaN values
             in1[var] = self.common_grid[var].where(inset_mask[var].notnull(), drop=True)
-        
+
         # Add bounds to the inset dataset for better spatial representation
         in1 = in1.cf.add_bounds(keys=["lon", "lat"])
         self.inset = in1  # Store the created inset dataset
 
     def infill(arr_in, n_iter=None, bathy=None):
-        """Replace NaN values in a 2D array by iteratively taking the geometric mean of surrounding points.
+        """TODO Replace NaN values in 2D array by iteratively taking the geometric mean of surrounding points.
 
         This method continues until all NaNs are filled or a specified number of iterations is reached.
 
         Args:
             arr_in (ndarray): Input 2D data array that may contain NaN values.
-            n_iter (int, optional): Maximum number of iterations to perform. If None, will run indefinitely until all NaNs are filled.
-           
-            bathy (ndarray, optional): A 2D bathymetry array that indicates land barriers (land areas should be set to zero).
+            n_iter (int, optional): Maximum number of iterations to perform. If None, will run indefinitely
+                                    until all NaNs are filled.
+
+            bathy (ndarray, optional): A 2D bathymetry array that indicates land barriers
+                                       (land areas should be set to zero).
 
         Returns:
             ndarray: The modified data array with NaN values replaced.
@@ -202,7 +212,7 @@ class GRID:
             bathy = np.ones_like(arr_in, dtype=float)  # Create a default bathymetry array of ones
         if n_iter is None:
             n_iter = np.inf  # Set to infinite iterations if not specified
-        
+
         # Find indices of NaN values in the input array where bathymetry is greater than zero
         ind = np.where(np.logical_and(np.isnan(arr_in), np.greater(bathy, 0.0)))
         counter = 0  # Initialize a counter for the number of iterations
@@ -226,7 +236,9 @@ class GRID:
             with warnings.catch_warnings():  # Suppress warnings during the operation
                 warnings.simplefilter("ignore", category=RuntimeWarning)  # Ignore runtime warnings
                 arr_in[ind] = np.nanmean(
-                    np.vstack((arr_in[ind_e], arr_in[ind_w], arr_in[ind_n], arr_in[ind_s])),  # Stack neighboring values
+                    np.vstack(
+                        (arr_in[ind_e], arr_in[ind_w], arr_in[ind_n], arr_in[ind_s])
+                    ),  # Stack neighboring values
                     axis=0,  # Calculate the mean along the vertical axis
                 )
 

@@ -36,11 +36,11 @@ def subset_mask(source_grid, destination_grid, return_masks=False):
     subset_lon_bool = (source_grid.common_grid["lon"] > destination_grid.common_grid["lon"].min()) & (
         source_grid.common_grid["lon"] < destination_grid.common_grid["lon"].max()
     )
-    
+
     # Store the masks in the source grid for later use
     source_grid.lat_bool = subset_lat_bool
     source_grid.lon_bool = subset_lon_bool
-    
+
     # Return the masks if requested
     if return_masks:
         return subset_lon_bool, subset_lat_bool
@@ -72,7 +72,7 @@ def make_subset(source_grid, subset_lon_bool=None, subset_lat_bool=None):
     for var in inset:
         # Add the variable to the new dataset, dropping NaN values
         in1[var] = inset[var].where(inset[var].notnull(), drop=True)
-    
+
     # Add bounds to the new dataset for better spatial representation
     in1 = in1.cf.add_bounds(keys=["lon", "lat"])
     # Store the created inset dataset in the source grid
@@ -91,7 +91,7 @@ def is_superset_of(source_grid, destination_grid, return_indices=True, tolerance
 
     Returns:
         tuple: Indices of the source grid if return_indices is True.
-    
+
     Raises:
         Exception: If the source grid is not a superset of the destination grid.
     """
@@ -107,8 +107,7 @@ def is_superset_of(source_grid, destination_grid, return_indices=True, tolerance
         )
     # Check maximum latitude bounds
     elif (
-        source_grid.common_grid["lat"].max() + tolerance <
-        destination_grid.common_grid["lat"].max()
+        source_grid.common_grid["lat"].max() + tolerance < destination_grid.common_grid["lat"].max()
         and destination_grid.common_grid["lat"].max() < 89
     ):
         raise Exception(
@@ -149,9 +148,9 @@ def make_regridder(
     regrid_algorithm="bilinear",
     save_weights=None,
     reload_weights=None,
-    periodic=True,  
-    ignore_degenerate=True,  
-    unmapped_to_nan=True,  
+    periodic=True,
+    ignore_degenerate=True,
+    unmapped_to_nan=True,
     force=False,
 ):
     """Create a regridder to transform the source grid onto the destination grid.
@@ -191,11 +190,11 @@ def make_regridder(
         unmapped_to_nan=unmapped_to_nan,  # Set unmapped values to NaN
         weights=reload_weights,  # Load weights if specified
     )
-    
+
     # If a path to save weights is provided, save the regridding weights
     if save_weights is not None:
         regridder.to_netcdf(save_weights)
-    
+
     return regridder  # Return the created regridder
 
 
@@ -218,13 +217,15 @@ def regrid_data(source_data, dest_grid=None, regridder=None):
         if dest_grid is not None:
             regridder = make_regridder(source_data, destination_grid=dest_grid)
         else:
-            raise Exception("Provide at least one of dest_grid or regridder.")  # Raise an error if neither is provided
+            raise Exception(
+                "Provide at least one of dest_grid or regridder."
+            )  # Raise an error if neither is provided
 
     # If the source data's inset is None, use the common grid as the inset
     if source_data.inset is None:
         source_data.inset = source_data.common_grid
-    
+
     # Use the regridder to transform the inset data to the destination grid
     dest_data = regridder(source_data.inset)
-    
+
     return dest_data  # Return the regridded data
