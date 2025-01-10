@@ -2,7 +2,7 @@ import copy as cp
 import warnings
 
 import numpy as np
-import xarray as xr 
+import xarray as xr
 
 
 class GRID:
@@ -32,14 +32,14 @@ class GRID:
             Exception: If the variable name for the specified dimension is not found in the dataset.
         """
         if dimtype == "longitude":
-            matches = self.lon_names 
+            matches = self.lon_names
         elif dimtype == "latitude":
             matches = self.lat_names
 
         # Check if any of the potential names exist in the dataset
         for var in matches:
-            if var in self.ds:  
-                return var 
+            if var in self.ds:
+                return var
 
         # Raise an exception if no variable name is found
         raise Exception(
