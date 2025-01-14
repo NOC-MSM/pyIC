@@ -7,3 +7,10 @@ channels:
 # - package1
 # - package2
 # DO NOT EDIT ABOVE THIS LINE, ADD DEPENDENCIES BELOW AS SHOWN IN THE EXAMPLE
+dependecies:
+- cf_xarray
+- netcdf4
+- numpy
+- xarray
+- xesmf
+- xcdat
