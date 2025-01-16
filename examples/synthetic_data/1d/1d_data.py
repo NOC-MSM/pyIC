@@ -22,8 +22,8 @@ def generate_dummy_data(num_samples=100, num_lat=5, num_lon=5, num_depth=10):
         temperature[:, d, :, :] = np.random.uniform(20, 25, (num_samples, num_lat, num_lon)) - (d * 0.2)  # Gradual decrease with depth
     
     # Create latitude and longitude coordinates
-    latitudes = np.linspace(-90, 90, num_lat)  # From -90 to 90 degrees
-    longitudes = np.linspace(-180, 180, num_lon)  # From -180 to 180 degrees
+    latitudes = np.linspace(-60, 60, num_lat)  # From -90 to 90 degrees
+    longitudes = np.linspace(0, 180, num_lon)  # From -180 to 180 degrees
     
     # Create an xarray Dataset
     ds = xr.Dataset(
@@ -41,14 +41,16 @@ def generate_dummy_data(num_samples=100, num_lat=5, num_lon=5, num_depth=10):
     
     return ds
 
-# Specify the number of samples, latitudes, longitudes, and depths
-num_samples = 3
-num_lat = 180
-num_lon = 360
-num_depth = 10
+if __name__ == '__main__':
 
-# Generate the data
-dummy_data = generate_dummy_data(num_samples, num_lat, num_lon, num_depth)
+    # Specify the number of samples, latitudes, longitudes, and depths
+    num_samples = 3
+    num_lat = 60
+    num_lon = 60
+    num_depth = 12
 
-# Optionally, save the dataset to a NetCDF file
-dummy_data.to_netcdf('1D_salinity_temperature_data.nc')
+    # Generate the data
+    dummy_data = generate_dummy_data(num_samples, num_lat, num_lon, num_depth)
+
+    # Optionally, save the dataset to a NetCDF file
+    dummy_data.to_netcdf('../1D_salinity_temperature_data_2.nc')

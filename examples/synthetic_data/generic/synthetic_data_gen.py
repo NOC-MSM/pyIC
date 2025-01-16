@@ -308,3 +308,18 @@ def make_dataset(dx=10.,dy=10.,domain='half_bowl',max_depth=3600,times=2):
     ds = ds.assign_coords({'lon':ds.lon,'lat':ds.lat})
     ds = ds.drop_vars(['x','y'])
     return ds
+
+if __name__ =='__main__':
+    #Make synthetic data sets using the make_dataset function from synthetic_data_gen
+    ds1 = make_dataset(domain='half_bowl')
+    ds2 = make_dataset(dx=1.,dy=1.,domain='half_bowl')
+
+    #make cropped ds for regridding
+    ds2_crop = xr.Dataset()
+    for var in ds2:
+        ds2_crop[var] = ds2[var][:,:,100:400,440:490]
+
+    #save both dses as netCDF
+    ds1.to_netcdf('ds1.nc')
+    ds2_crop.to_netcdf('ds2.nc')
+
