@@ -54,5 +54,5 @@ if __name__ == "__main__":
 
     # Optionally, save the dataset to a NetCDF file
     dummy_data.to_netcdf(
-        "/home/users/jdconey/pyIC/examples/synthetic_data/1d/1D_salinity_temperature_data.nc"
+        "~/pyIC/examples/synthetic_data/1d/1D_salinity_temperature_data.nc"
     )

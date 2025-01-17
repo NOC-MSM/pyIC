@@ -4,10 +4,10 @@ from pyic.grid import GRID
 from pyic.regrid import make_regridder, regrid_data
 
 grid1 = GRID(
-    "/home/users/jdconey/pyIC/examples/synthetic_data/generic/ds1.nc", ds_lon_name="lon", ds_lat_name="lat"
+    "~/pyIC/examples/synthetic_data/generic/ds1.nc", ds_lon_name="lon", ds_lat_name="lat"
 )
 grid2 = GRID(
-    "/home/users/jdconey/pyIC/examples/synthetic_data/1d/1D_salinity_temperature_data.nc",
+    "~/pyIC/examples/synthetic_data/1d/1D_salinity_temperature_data.nc",
     ds_lon_name="longitude",
     ds_lat_name="latitude",
     ds_time_counter="time",
@@ -19,4 +19,4 @@ grid2 = GRID(
 regridder = make_regridder(grid1, grid2, regrid_algorithm="conservative", force=False)
 
 regridded_data = regrid_data(grid1, regridder=regridder)
-regridded_data.to_netcdf("/home/users/jdconey/pyIC/examples/synthetic_data/1d/regridded_to_1d.nc")
+regridded_data.to_netcdf("~/pyIC/examples/synthetic_data/1d/regridded_to_1d.nc")
