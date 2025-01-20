@@ -21,7 +21,7 @@ class GRID:
             xarray.Dataset: The opened dataset.
         """
         if convert_to_z:
-            return self.convert_grid(filename)
+            return self.convert_grid(filename, z_kwargs=z_kwargs)
         return xr.open_dataset(filename)  # Use xarray to open the dataset file
 
     def get_dim_varname(self, dimtype):
@@ -102,7 +102,7 @@ class GRID:
             lat_name,
         )  # Return the longitude and latitude DataArrays and their names
 
-    def make_common_coords(self, lon_name, lat_name, time_counter="time_counter", convert_to_z_grid=False):
+    def make_common_coords(self, lon_name, lat_name, time_counter="time_counter"):
         """Align the grid dataset with common coordinate names for regridding.
 
         Args:
@@ -143,6 +143,8 @@ class GRID:
         # xcdat documentation here https://xcdat.readthedocs.io/en/main-doc-fix/examples/regridding-vertical.html
         # xgcm documentation here https://xgcm.readthedocs.io/en/latest/transform.html?highlight=vertical
 
+        #test using data found here https://xcdat.readthedocs.io/en/v0.7.2/examples/regridding-vertical.html
+
         import xcdat
 
         ds_grid = xr.open_dataset(filename)
@@ -151,7 +153,7 @@ class GRID:
             raise Exception("Provide z levels to regrid to using z_kwargs = {'lev':[some levels]}.")
         if "var" not in z_kwargs:
             raise Exception("Provide origin vertical grid variable as z_kwargs = {'var':'so'}.")
-        if "method" not in z_kwargs:
+        if "method" in z_kwargs:
             method = z_kwargs["method"]
         else:
             method = "linear"
@@ -195,7 +197,9 @@ class GRID:
 
         # Create a common grid with standardized coordinate names
         self.common_grid, self.common_ds = self.make_common_coords(
-            ds_lon_name, ds_lat_name, ds_time_counter, convert_to_z_grid
+            ds_lon_name,
+            ds_lat_name,
+            ds_time_counter,
         )
 
         # Store the names of the longitude and latitude variables for later use
