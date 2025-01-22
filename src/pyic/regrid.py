@@ -80,7 +80,7 @@ def make_subset(source_grid, subset_lon_bool=None, subset_lat_bool=None):
     return source_grid.inset  # Return the inset dataset
 
 
-def is_superset_of(source_grid, destination_grid, return_indices=True, tolerance=0):
+def is_superset_of(source_grid, destination_grid, return_indices=False, tolerance=0):
     """Check if the source grid is a superset of the destination grid.
 
     Args:
@@ -152,6 +152,9 @@ def make_regridder(
     ignore_degenerate=True,
     unmapped_to_nan=True,
     force=False,
+    check_superset=True,
+    use_inset=False,
+    parallel=False,
 ):
     """Create a regridder to transform the source grid onto the destination grid.
 
@@ -164,21 +167,28 @@ def make_regridder(
         periodic (bool): If True, allows periodic boundaries in the regridding process.
         ignore_degenerate (bool): If True, ignores degenerate grid cells during regridding.
         unmapped_to_nan (bool): If True, sets unmapped values to NaN in the output.
-        force (bool): If True, skip superset checks and force regridding.
+        force (bool): If True, skip superset checks and force regridding
+                      (equivalent to setting both check_superset and use_inset to False).
+        check_superset (bool): If True, check source is a superset of destination.
+        use_inset (bool): If True, make inset of source. Sometimes results in a type error.
 
     Returns:
         xesmf.Regridder: The regridder object for transforming data.
     """
-    if force:
+    if force or (not (use_inset or check_superset)):
         # If forced, use the entire common grid as the inset
         source_grid.inset = source_grid.common_grid
     else:
-        # Check if the source grid is a superset of the destination grid
-        is_superset_of(source_grid, destination_grid)
-        # Create masks for the source grid based on the destination grid
-        subset_mask(source_grid, destination_grid)
-        # Create a subset of the source grid based on the masks
-        make_subset(source_grid)
+        if check_superset:
+            # Check if the source grid is a superset of the destination grid
+            is_superset_of(source_grid, destination_grid)
+        if use_inset:
+            # Create masks for the source grid based on the destination grid
+            subset_mask(source_grid, destination_grid)
+            # Create a subset of the source grid based on the masks
+            make_subset(source_grid)
+        else:
+            source_grid.inset = source_grid.common_grid
 
     # Create a regridder object using xesmf
     regridder = xe.Regridder(
@@ -189,6 +199,7 @@ def make_regridder(
         ignore_degenerate=ignore_degenerate,  # Ignore degenerate grid cells
         unmapped_to_nan=unmapped_to_nan,  # Set unmapped values to NaN
         weights=reload_weights,  # Load weights if specified
+        parallel=parallel,  # Whether to create weights in parallel
     )
 
     # If a path to save weights is provided, save the regridding weights
@@ -222,10 +233,10 @@ def regrid_data(source_data, dest_grid=None, regridder=None):
             )  # Raise an error if neither is provided
 
     # If the source data's inset is None, use the common grid as the inset
-    if source_data.inset is None:
-        source_data.inset = source_data.common_grid
+    if source_data.inset_ds is None:
+        source_data.inset_ds = source_data.common_grid
 
     # Use the regridder to transform the inset data to the destination grid
-    dest_data = regridder(source_data.inset)
+    dest_data = regridder(source_data.inset_ds)
 
     return dest_data  # Return the regridded data

@@ -21,7 +21,7 @@ class GRID:
             xarray.Dataset: The opened dataset.
         """
         if convert_to_z:
-            return self.convert_grid(filename)
+            return self.convert_grid(filename, z_kwargs=z_kwargs)
         return xr.open_dataset(filename)  # Use xarray to open the dataset file
 
     def get_dim_varname(self, dimtype):
@@ -102,7 +102,7 @@ class GRID:
             lat_name,
         )  # Return the longitude and latitude DataArrays and their names
 
-    def make_common_coords(self, lon_name, lat_name, time_counter="time_counter", convert_to_z_grid=False):
+    def make_common_coords(self, lon_name, lat_name, time_counter="time_counter"):
         """Align the grid dataset with common coordinate names for regridding.
 
         Args:
@@ -113,23 +113,27 @@ class GRID:
         Returns:
             xarray.Dataset: The dataset with standardized coordinate names and attributes for regridding.
         """
-        # Check if the time_counter variable exists in the dataset
-        if time_counter in self.ds:
-            # If it exists, select the first time step and rename the longitude and latitude variables
-            ds_grid = self.ds.isel({time_counter: 0}).rename({lon_name: "lon", lat_name: "lat"})
-        else:
-            # If it doesn't exist, simply rename the longitude and latitude variables
-            ds_grid = self.ds.rename({lon_name: "lon", lat_name: "lat"})
+        ds_grid = self.ds.rename({lon_name: "lon", lat_name: "lat"})
 
         # Assign attributes to the latitude variable for clarity and standardization
         ds_grid["lat"] = ds_grid["lat"].assign_attrs(units="degrees_north", standard_name="latitude")
         # Assign attributes to the longitude variable for clarity and standardization
         ds_grid["lon"] = ds_grid["lon"].assign_attrs(units="degrees_east", standard_name="longitude")
+        # Check if the time_counter variable exists in the dataset
+        if time_counter in ds_grid:
+            # If it exists, select the first time step
+            ds_grid = ds_grid.isel({time_counter: 0}).set_coords(("lat", "lon"))
+        else:
+            # If it doesn't exist, simply rename the longitude and latitude variables
+            ds_grid = ds_grid.set_coords(("lat", "lon"))
 
-        # Set the latitude and longitude variables as coordinates in the dataset
-        ds_grid = ds_grid.set_coords(("lat", "lon"))
         # Add bounds to the latitude and longitude coordinates for better spatial representation
-        ds_grid = ds_grid.cf.add_bounds(keys=["lon", "lat"])
+        try:
+            ds_grid = ds_grid.cf.add_bounds(keys=["lon", "lat"])
+        except Exception as e:
+            print("Couldn't add bounds.")
+            print(e)
+            print("Continuing anyway.")
 
         return ds_grid  # Return the modified dataset with common coordinates
 
@@ -141,6 +145,8 @@ class GRID:
         # xcdat documentation here https://xcdat.readthedocs.io/en/main-doc-fix/examples/regridding-vertical.html
         # xgcm documentation here https://xgcm.readthedocs.io/en/latest/transform.html?highlight=vertical
 
+        # test using data found here https://xcdat.readthedocs.io/en/v0.7.2/examples/regridding-vertical.html
+
         import xcdat
 
         ds_grid = xr.open_dataset(filename)
@@ -149,7 +155,7 @@ class GRID:
             raise Exception("Provide z levels to regrid to using z_kwargs = {'lev':[some levels]}.")
         if "var" not in z_kwargs:
             raise Exception("Provide origin vertical grid variable as z_kwargs = {'var':'so'}.")
-        if "method" not in z_kwargs:
+        if "method" in z_kwargs:
             method = z_kwargs["method"]
         else:
             method = "linear"
@@ -193,7 +199,9 @@ class GRID:
 
         # Create a common grid with standardized coordinate names
         self.common_grid = self.make_common_coords(
-            ds_lon_name, ds_lat_name, ds_time_counter, convert_to_z_grid
+            ds_lon_name,
+            ds_lat_name,
+            ds_time_counter,
         )
 
         # Store the names of the longitude and latitude variables for later use
@@ -201,24 +209,8 @@ class GRID:
 
         # Initialize additional attributes for later processing
         self.inset = None  # Placeholder for inset data
+        self.inset_ds = None
         self.lon_bool, self.lat_bool = None, None  # Boolean flags for longitude and latitude checks
-
-    def make_inset(self, inset_mask):
-        """Create an inset dataset based on a provided mask.
-
-        Args:
-            inset_mask (xarray.Dataset): A mask dataset that defines the area to be included in the inset.
-        """
-        in1 = xr.Dataset()  # Create an empty xarray Dataset for the inset
-
-        # Loop through each variable in the common grid
-        for var in self.common_grid:
-            # Create a new variable in the inset dataset, applying the mask to drop NaN values
-            in1[var] = self.common_grid[var].where(inset_mask[var].notnull(), drop=True)
-
-        # Add bounds to the inset dataset for better spatial representation
-        in1 = in1.cf.add_bounds(keys=["lon", "lat"])
-        self.inset = in1  # Store the created inset dataset
 
 
 def infill(arr_in, n_iter=None, bathy=None):
