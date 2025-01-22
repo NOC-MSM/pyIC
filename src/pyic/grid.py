@@ -126,7 +126,7 @@ class GRID:
         else:
             # If it doesn't exist, simply rename the longitude and latitude variables
             ds_grid = ds_grid.set_coords(("lat", "lon"))
-        
+
         # Add bounds to the latitude and longitude coordinates for better spatial representation
         try:
             ds_grid = ds_grid.cf.add_bounds(keys=["lon", "lat"])
@@ -145,7 +145,7 @@ class GRID:
         # xcdat documentation here https://xcdat.readthedocs.io/en/main-doc-fix/examples/regridding-vertical.html
         # xgcm documentation here https://xgcm.readthedocs.io/en/latest/transform.html?highlight=vertical
 
-        #test using data found here https://xcdat.readthedocs.io/en/v0.7.2/examples/regridding-vertical.html
+        # test using data found here https://xcdat.readthedocs.io/en/v0.7.2/examples/regridding-vertical.html
 
         import xcdat
 

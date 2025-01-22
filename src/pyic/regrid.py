@@ -154,7 +154,7 @@ def make_regridder(
     force=False,
     check_superset=True,
     use_inset=False,
-    parallel = False
+    parallel=False,
 ):
     """Create a regridder to transform the source grid onto the destination grid.
 
@@ -199,7 +199,7 @@ def make_regridder(
         ignore_degenerate=ignore_degenerate,  # Ignore degenerate grid cells
         unmapped_to_nan=unmapped_to_nan,  # Set unmapped values to NaN
         weights=reload_weights,  # Load weights if specified
-        parallel = parallel, #Whether to create weights in parallel
+        parallel=parallel,  # Whether to create weights in parallel
     )
 
     # If a path to save weights is provided, save the regridding weights
