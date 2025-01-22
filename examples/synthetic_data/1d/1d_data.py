@@ -53,6 +53,4 @@ if __name__ == "__main__":
     dummy_data = generate_dummy_data(num_samples, num_lat, num_lon, num_depth)
 
     # Optionally, save the dataset to a NetCDF file
-    dummy_data.to_netcdf(
-        "~/pyIC/examples/synthetic_data/1d/1D_salinity_temperature_data.nc"
-    )
+    dummy_data.to_netcdf("~/pyIC/examples/synthetic_data/1d/1D_salinity_temperature_data.nc")

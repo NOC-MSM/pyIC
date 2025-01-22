@@ -6,12 +6,8 @@ import xarray as xr
 from pyic.grid import GRID
 from pyic.regrid import make_regridder, regrid_data
 
-grid1 = GRID(
-    "~/pyIC/examples/generate_synthetic_data/ds1.nc", ds_lon_name="lon", ds_lat_name="lat"
-)
-grid2 = GRID(
-    "~/pyIC/examples/generate_synthetic_data/ds2.nc", ds_lon_name="lon", ds_lat_name="lat"
-)
+grid1 = GRID("~/pyIC/examples/generate_synthetic_data/ds1.nc", ds_lon_name="lon", ds_lat_name="lat")
+grid2 = GRID("~/pyIC/examples/generate_synthetic_data/ds2.nc", ds_lon_name="lon", ds_lat_name="lat")
 # make regridder and use that regridder to regrid grid1.
 # grid1 in the regrid_data function just needs to be a GRID#
 # object with the same domain as the GRID used to make the regridder.

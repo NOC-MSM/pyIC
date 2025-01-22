@@ -3,9 +3,7 @@ import xarray as xr
 from pyic.grid import GRID
 from pyic.regrid import make_regridder, regrid_data
 
-grid1 = GRID(
-    "~/pyIC/examples/synthetic_data/generic/ds1.nc", ds_lon_name="lon", ds_lat_name="lat"
-)
+grid1 = GRID("~/pyIC/examples/synthetic_data/generic/ds1.nc", ds_lon_name="lon", ds_lat_name="lat")
 grid2 = GRID(
     "~/pyIC/examples/synthetic_data/1d/1D_salinity_temperature_data.nc",
     ds_lon_name="longitude",
