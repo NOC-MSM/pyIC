@@ -119,21 +119,23 @@ class GRID:
         ds_grid["lat"] = ds_grid["lat"].assign_attrs(units="degrees_north", standard_name="latitude")
         # Assign attributes to the longitude variable for clarity and standardization
         ds_grid["lon"] = ds_grid["lon"].assign_attrs(units="degrees_east", standard_name="longitude")
-
-        # Set the latitude and longitude variables as coordinates in the dataset
-        ds_grid = ds_grid.set_coords(("lat", "lon"))
-        # Add bounds to the latitude and longitude coordinates for better spatial representation
-        ds_grid = ds_grid.cf.add_bounds(keys=["lon", "lat"])
-
         # Check if the time_counter variable exists in the dataset
         if time_counter in ds_grid:
-            # If it exists, select the first time step and rename the longitude and latitude variables
-            ds_grid_t0 = ds_grid.isel({time_counter: 0})
+            # If it exists, select the first time step
+            ds_grid = ds_grid.isel({time_counter: 0}).set_coords(("lat", "lon"))
         else:
             # If it doesn't exist, simply rename the longitude and latitude variables
-            ds_grid_t0 = ds_grid
+            ds_grid = ds_grid.set_coords(("lat", "lon"))
+        
+        # Add bounds to the latitude and longitude coordinates for better spatial representation
+        try:
+            ds_grid = ds_grid.cf.add_bounds(keys=["lon", "lat"])
+        except Exception as e:
+            print("Couldn't add bounds.")
+            print(e)
+            print("Continuing anyway.")
 
-        return ds_grid_t0, ds_grid  # Return the modified dataset with common coordinates
+        return ds_grid  # Return the modified dataset with common coordinates
 
     def convert_grid(filename, z_kwargs):
         """TODO. Vertical regrid of data.
@@ -196,7 +198,7 @@ class GRID:
         self.lon, self.lat, ds_lon_name, ds_lat_name = self.extract_lonlat(ds_lon_name, ds_lat_name)
 
         # Create a common grid with standardized coordinate names
-        self.common_grid, self.common_ds = self.make_common_coords(
+        self.common_grid = self.make_common_coords(
             ds_lon_name,
             ds_lat_name,
             ds_time_counter,
