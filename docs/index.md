@@ -6,11 +6,11 @@
 
 ______________________________________________________________________
 
-## Configuration :globe_with_meridians:
+## Configuration
 
 ______________________________________________________________________
 
-## Quick Start :rocket:
+## Quick Start 
 
 ### Installation
 
