@@ -132,7 +132,7 @@ jobs:
         restore-keys: |
           mkdocs-material-
     - run: pip install mkdocs-material mkdocs-glightbox
-    - working-directory: ./docs
+    - name: deploy documentation
       run: mkdocs gh-deploy --force
 
   integration-tests:
