@@ -1,7 +1,7 @@
 import sys
 
-from src.pyic.grid import GRID
-from src.pyic.regrid import make_regridder
+from pyic.grid import GRID
+from pyic.regrid import make_regridder
 
 file1 = sys.argv[1]
 file2 = sys.argv[2]
