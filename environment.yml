@@ -353,4 +353,3 @@ dependencies:
       - pyyaml-env-tag==0.1
       - regex==2024.11.6
       - watchdog==6.0.0
-prefix: /home/users/jdconey/miniforge3/envs/pyIC_dev
