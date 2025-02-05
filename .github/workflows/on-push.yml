@@ -4,7 +4,6 @@ on:
   push:
     branches:
     - main
-    - 14-docs-update
     tags:
     - '*'
   pull_request:
