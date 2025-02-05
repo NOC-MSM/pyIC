@@ -1,4 +1,4 @@
-mkdocs.ymlsite_name: pyIC Documentation
+site_name: pyIC Documentation
 site_url: https://noc-msm.github.io/pyIC
 
 repo_url: https://github.com/NOC-MSM/pyIC
