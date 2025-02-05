@@ -13,6 +13,13 @@ pyIC is a python package to generate initial conditions for regional NEMO model 
 pyIC is insatlled under a conda/mamba environment to aid wider distribution and to facilitate development.
 The key dependecies are listed below:
 
+- cf_xarray
+- netcdf4
+- numpy
+- xarray
+- xesmf
+- xcdat
+
 ---
 
 ## Quick Start :rocket:
@@ -30,7 +37,9 @@ git clone git@github.com:NOC-MSM/pyIC.git
 
     - **It is not advised to checkout the respository in your home directory.**
 
-Create a specific conda virtual environment. Load conda (e.g. through anaconda/miniforge) and create the environment through the provided `environment.yml` file.
+Creating a specific conda virtual environment is highly recommended ([click here for more about virtual
+enviroments](https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html)).
+Load conda (e.g. through anaconda/miniforge) and create the environment through the provided `environment.yml` file.
 
 ```sh
 cd $PYIC_DIR
