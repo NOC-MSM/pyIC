@@ -1,8 +1,10 @@
 # pyIC
 
-Boilerplate to create a Python package based on conda-forge
+pyIC is a python package to generate initial conditions for regional NEMO model configurations.
 
 ## Quick Start
+
+Detailed instructions for getting started with using this package are available in the [documentation](https://noc-msm.github.io/pyIC/#quick-start).
 
 ```python
 >>> import pyic
