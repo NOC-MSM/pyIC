@@ -20,9 +20,10 @@ class GRID:
         Returns:
             xarray.Dataset: The opened dataset.
         """
+        ds = xr.open_dataset(filename)
         if convert_to_z:
-            return self.convert_grid(filename, z_kwargs=z_kwargs)
-        return xr.open_dataset(filename)  # Use xarray to open the dataset file
+            return self.convert_grid(ds, z_kwargs=z_kwargs)
+        return ds
 
     def get_dim_varname(self, dimtype):
         """Retrieve the variable name corresponding to a specified dimension type (longitude or latitude).
@@ -137,36 +138,108 @@ class GRID:
 
         return ds_grid  # Return the modified dataset with common coordinates
 
-    def convert_grid(filename, z_kwargs):
-        """TODO. Vertical regrid of data.
+    def convert_grid(self, ds_grid, z_kwargs, periodic=False):
+        print("Vertical regridding is still under construction. Use at your own risk.")
+        """Vertical regrid of data using xgcm's built in vertical regridder with their `Grid` class.
 
-        using xgcm's built in vertical regridder with xCDAT.
+        For this to work you will need:
+        data set on some metric of depth (let's say salinity)
+        a variable within the data set of your desired metric (depth in metres on salinity levels)
+
+
         """
-        # xcdat documentation here https://xcdat.readthedocs.io/en/main-doc-fix/examples/regridding-vertical.html
         # xgcm documentation here https://xgcm.readthedocs.io/en/latest/transform.html?highlight=vertical
-
         # test using data found here https://xcdat.readthedocs.io/en/v0.7.2/examples/regridding-vertical.html
 
-        import xcdat
+        from xgcm import Grid as xgcm_grid
 
-        ds_grid = xr.open_dataset(filename)
+        self.raw_ds = ds_grid
 
-        if "lev" not in z_kwargs:
-            raise Exception("Provide z levels to regrid to using z_kwargs = {'lev':[some levels]}.")
-        if "var" not in z_kwargs:
-            raise Exception("Provide origin vertical grid variable as z_kwargs = {'var':'so'}.")
+        if "variable" not in z_kwargs:
+            raise Exception("Provide origin vertical grid variable as z_kwargs = {...,'variable':'so',...}.")
+        if "coord" not in z_kwargs:
+            default_coord = "lev"
+            print(f"source coord not given, using default, {default_coord}.")
+            z_kwargs["coord"] = default_coord
+        if "target" not in z_kwargs:
+            raise Exception(
+                "Provide target levels using z_kwargs = {...,'target':np.array/xr.DataArray,...}."
+            )
+
+        if "target_variable" in z_kwargs:
+            target_data = ds_grid[z_kwargs["target_variable"]]
+        else:
+            target_data = None
+
         if "method" in z_kwargs:
             method = z_kwargs["method"]
         else:
             method = "linear"
+            print(f"'method' not specified in z_kwargs: using default, {method}.")
+        available_methods = ["linear", "log", "conservative"]
+        if method not in available_methods:
+            raise Exception(f"Cannot use regridding method {method}. Choose one of {available_methods}.")
+        # optional argument handing
+        for optional_arg in ["mask_edges", "bypass_checks", "suffix"]:
+            if optional_arg not in z_kwargs:
+                z_kwargs[optional_arg] = None
 
-        ds_grid = ds_grid.regridder.vertical(z_kwargs["var"], z_kwargs["lev"], tool="xgcm", method=method)
-
-        return ds_grid
+        xgrid = xgcm_grid(
+            ds_grid,
+            coords={
+                "Z": {"center": z_kwargs["coord"]},
+            },
+            periodic=periodic,
+        )
+        ds_out = xr.Dataset()
+        if type(z_kwargs["variable"]) is list:
+            for var in z_kwargs["variable"]:
+                da_grid = xgrid.transform(
+                    da=ds_grid[var],
+                    axis="Z",
+                    target=z_kwargs["target"],
+                    target_data=target_data,
+                    method=method,
+                    mask_edges=z_kwargs["mask_edges"],
+                    bypass_checks=z_kwargs["bypass_checks"],
+                    suffix=z_kwargs["suffix"],
+                )
+                ds_out[var] = da_grid
+        elif z_kwargs["variable"] == "all":
+            for var in ds_grid:
+                try:
+                    da_grid = xgrid.transform(
+                        da=ds_grid[var],
+                        axis="Z",
+                        target=z_kwargs["target"],
+                        target_data=target_data,
+                        method=method,
+                        mask_edges=z_kwargs["mask_edges"],
+                        bypass_checks=z_kwargs["bypass_checks"],
+                        suffix=z_kwargs["suffix"],
+                    )
+                    ds_out[var] = da_grid
+                except Exception as e:
+                    print(f"Skipping '{var}' because:")
+                    print(e)
+        else:
+            da_grid = xgrid.transform(
+                da=ds_grid[z_kwargs["variable"]],
+                axis="Z",
+                target=z_kwargs["target"],
+                target_data=target_data,
+                method=method,
+                mask_edges=z_kwargs["mask_edges"],
+                bypass_checks=z_kwargs["bypass_checks"],
+                suffix=z_kwargs["suffix"],
+            )
+            ds_out[z_kwargs["variable"]] = da_grid
+        return ds_out
 
     def __init__(
         self,
         data_filename=None,
+        dataset=None,
         ds_lon_name=None,
         ds_lat_name=None,
         ds_time_counter="time_counter",
@@ -177,6 +250,7 @@ class GRID:
 
         Args:
             data_filename (str, optional): Path to the dataset file on the desired grid.
+            dataset (xr.Dataset, optional): xarray Dataset object
             ds_lon_name (str, optional): The name of the longitude variable in the dataset.
                                           If None, it will be inferred from common names.
             ds_lat_name (str, optional): The name of the latitude variable in the dataset.
@@ -188,11 +262,25 @@ class GRID:
             z_kwargs (dict, optional): additional details required for vertical regridding
         """
         self.data_filename = data_filename  # Store the path to the dataset file
-        self.lon_names = ["glamt", "nav_lon"]  # List of potential longitude variable names
-        self.lat_names = ["gphit", "nav_lat"]  # List of potential latitude variable names
+        self.lon_names = [
+            "glamt",
+            "nav_lon",
+            "lon",
+            "longitude",
+        ]
+        # List of potential longitude variable names
+        self.lat_names = ["gphit", "nav_lat", "lat", "latitude"]  # List of potential latitude variable names
 
-        # Open the dataset using the provided filename
-        self.ds = self.open_dataset(self.data_filename, convert_to_z_grid, z_kwargs)
+        # Open the dataset
+        if self.data_filename is not None:
+            self.ds = self.open_dataset(self.data_filename, convert_to_z_grid, z_kwargs)
+        elif dataset is not None:
+            if convert_to_z_grid:
+                self.ds = self.convert_grid(dataset, z_kwargs)
+            else:
+                self.ds = dataset
+        else:
+            raise Exception("Specify one of 'data_filename' or 'dataset'.")
 
         # Extract longitude and latitude DataArrays and their names
         self.lon, self.lat, ds_lon_name, ds_lat_name = self.extract_lonlat(ds_lon_name, ds_lat_name)
@@ -214,7 +302,7 @@ class GRID:
 
 
 def infill(arr_in, n_iter=None, bathy=None):
-    """TODO: INTEGRATE WITH CLASS PROPERLY.
+    """TODO: INTEGRATE WITH CLASS PROPERLY. ADD ATTRIBUTION.
 
     Returns data with any NaNs replaced by iteratively taking the geometric
     mean of surrounding points until all NaNs are removed or n_inter-ations

@@ -24,7 +24,7 @@ dependencies = [
   "numpy",
   "xarray",
   "xesmf",
-  "xcdat @git+https://github.com/xCDAT/xcdat"
+  "xgcm"
 ]
 description = "NEMO Regional Configuration Toolbox"
 dynamic = ["version"]
