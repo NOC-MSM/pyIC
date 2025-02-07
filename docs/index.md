@@ -18,7 +18,7 @@ The key dependecies are listed below:
 - numpy
 - xarray
 - xesmf
-- xcdat
+- xgcm
 
 ---
 
@@ -66,6 +66,12 @@ A basic example is included within the `pyic_exe.py` script and can be run from 
 
 ```sh
 python pyic_exe.py file1.nc file2.nc
+```
+
+or
+
+```
+pyic file1.nc file2.nc
 ```
 
 ### Example scripts

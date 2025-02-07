@@ -24,7 +24,7 @@ dependencies = [
   "numpy",
   "xarray",
   "xesmf",
-  "xcdat @git+https://github.com/xCDAT/xcdat"
+  "xgcm"
 ]
 description = "NEMO Regional Configuration Toolbox"
 dynamic = ["version"]
@@ -68,7 +68,7 @@ strict = false
 
 [[tool.mypy.overrides]]
 ignore_missing_imports = true
-module = ["xesmf.*", "xcdat.*"]
+module = ["xesmf.*", "xgcm.*"]
 
 [tool.ruff]
 # Black line length is 88, but black does not format comments.
