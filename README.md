@@ -28,7 +28,7 @@ Before pushing to GitHub, run the following commands:
 1. Run quality assurance checks: `make qa`
 1. Run tests: `make unit-tests`
 1. Run the static type checker: `make type-check`
-1. Build the documentation (see [Sphinx tutorial](https://www.sphinx-doc.org/en/master/tutorial/)): `make docs-build`
+1. The documentation builds automatically on push (the default version of this cookie-cutter package uses Sphinx, which we're not using here).
 
 ## License
 
