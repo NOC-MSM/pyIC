@@ -22,7 +22,7 @@ class GRID:
         """
         ds = xr.open_dataset(filename)
         if convert_to_z:
-            return self.convert_grid(ds, z_kwargs=z_kwargs)
+            return self.vertical_regrid(ds, z_kwargs=z_kwargs)
         return ds
 
     def get_dim_varname(self, dimtype):
@@ -138,23 +138,27 @@ class GRID:
 
         return ds_grid  # Return the modified dataset with common coordinates
 
-    def convert_grid(self, ds_grid, z_kwargs, periodic=False):
+    def vertical_regrid(self, ds_grid, z_kwargs, periodic=False):
         print("Vertical regridding is still under construction. Use at your own risk.")
         """Vertical regrid of data using xgcm's built in vertical regridder with their `Grid` class.
 
         For this to work you will need:
         data set on some metric of depth (let's say salinity)
         a variable within the data set of your desired metric (depth in metres on salinity levels)
+        z_kwargs: dict containing at least {'variable':str/list of strs,'target':array_like}.
+                Other arguments are as in the xgcm documentation:
+                https://xgcm.readthedocs.io/en/latest/transform.html?highlight=vertical
+        periodic: bool, passed to xgcm.Grid.
 
-
+        returns vertically regridded data set.
         """
-        # xgcm documentation here https://xgcm.readthedocs.io/en/latest/transform.html?highlight=vertical
-        # test using data found here https://xcdat.readthedocs.io/en/v0.7.2/examples/regridding-vertical.html
 
         from xgcm import Grid as xgcm_grid
 
+        # save existing grid if required after regridding
         self.raw_ds = ds_grid
 
+        # check z_kwargs are populated and infer if not
         if "variable" not in z_kwargs:
             raise Exception("Provide origin vertical grid variable as z_kwargs = {...,'variable':'so',...}.")
         if "coord" not in z_kwargs:
@@ -165,12 +169,10 @@ class GRID:
             raise Exception(
                 "Provide target levels using z_kwargs = {...,'target':np.array/xr.DataArray,...}."
             )
-
         if "target_variable" in z_kwargs:
             target_data = ds_grid[z_kwargs["target_variable"]]
         else:
             target_data = None
-
         if "method" in z_kwargs:
             method = z_kwargs["method"]
         else:
@@ -179,11 +181,12 @@ class GRID:
         available_methods = ["linear", "log", "conservative"]
         if method not in available_methods:
             raise Exception(f"Cannot use regridding method {method}. Choose one of {available_methods}.")
-        # optional argument handing
+        # optional argument handling
         for optional_arg in ["mask_edges", "bypass_checks", "suffix"]:
             if optional_arg not in z_kwargs:
                 z_kwargs[optional_arg] = None
 
+        # setup xgcm Grid
         xgrid = xgcm_grid(
             ds_grid,
             coords={
@@ -191,6 +194,7 @@ class GRID:
             },
             periodic=periodic,
         )
+        # vertical regrid, either for each variable or individual depending on argument.
         ds_out = xr.Dataset()
         if type(z_kwargs["variable"]) is list:
             for var in z_kwargs["variable"]:
@@ -276,7 +280,7 @@ class GRID:
             self.ds = self.open_dataset(self.data_filename, convert_to_z_grid, z_kwargs)
         elif dataset is not None:
             if convert_to_z_grid:
-                self.ds = self.convert_grid(dataset, z_kwargs)
+                self.ds = self.vertical_regrid(dataset, z_kwargs)
             else:
                 self.ds = dataset
         else:

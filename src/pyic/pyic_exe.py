@@ -13,8 +13,8 @@ def main():
     parser.add_argument("source", help="path to source data/grid file")
     parser.add_argument("destination", help="path to destination grid file")
     args = parser.parse_args()
-    grid1 = GRID(args.source)
-    grid2 = GRID(args.destination)
+    grid1 = GRID(data_filename=args.source)
+    grid2 = GRID(data_filename=args.destination)
     regridder = make_regridder(grid1, grid2, save_weights="weights.nc")
     regridder.to_netcdf("regridded.nc")
 
