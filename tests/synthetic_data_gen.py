@@ -12,8 +12,8 @@ import numpy as np
 # from matplotlib.colors import LightSource
 # sns.set(color_codes=True)
 import xarray as xr
-
 import xesmf as xe
+
 
 def rmax(dept):
     rmax_x = np.zeros_like(dept)
@@ -353,7 +353,7 @@ def main():
     for var in ds1:
         ds1_crop[var] = ds1[var][:, :, 5:45, 5:45]
 
-    rgdr  = xe.Regridder(ds2,ds1_crop,method='bilinear')
+    rgdr = xe.Regridder(ds2, ds1_crop, method="bilinear")
     ds2_rgd = rgdr(ds2)
 
     # save dses as netCDF
@@ -361,6 +361,7 @@ def main():
     ds1_crop.to_netcdf("ds1_crop.nc")
     ds2.to_netcdf("ds2.nc")
     ds2_rgd.to_netcdf("ds2_rgd.nc")
+
 
 if __name__ == "__main__":
     main()
