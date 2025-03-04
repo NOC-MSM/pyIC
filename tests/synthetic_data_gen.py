@@ -1,16 +1,9 @@
 # based off IMMERSE_test_cases.ipynb
 
 # Import packages
-# import matplotlib.cm as cm
 from typing import Union
 
 import numpy as np
-
-# import matplotlib.pyplot as plt
-# from mpl_toolkits.mplot3d.axes3d import Axes3D
-# import seaborn as sns
-# from matplotlib.colors import LightSource
-# sns.set(color_codes=True)
 import xarray as xr
 import xesmf as xe
 
@@ -178,54 +171,6 @@ def half_bowl(lx=500.0, ly=500.0, dx=10.0, dy=10.0, lx2=50.0, ly2=100.0, stiff=1
     return x, y, zt, rm
 
 
-'''
-def plot_dom(x, y, zt, rm, title):
-    """
-    Plot idealised domain
-
-    Plots the idealised overflow test case as a 3D surface
-    plot, coloured with the associated r-max value for reference.
-
-    Args:
-        x, y  (np.ndarray): coordinates (km)
-        zt    (np.ndarray): depth array at t-points (m)
-        rm    (np.ndarray): r-max array at t-points (m)
-
-    Returns:
-    """
-    # Set figure and axes handles
-    fig = plt.figure(figsize=plt.figaspect(0.33) * 1.5)
-    ax = fig.add_subplot(projection="3d")
-
-    # Create light source object, shade data of r-max and rgb array
-    ls = LightSource(azdeg=0, altdeg=90)
-    rgb = ls.shade(rm, plt.cm.RdYlBu)
-
-    # Plot surface
-    surf = ax.plot_surface(x, y, zt, rstride=1, cstride=1, linewidth=0, antialiased=False, facecolors=rgb)
-
-    # Scrape colour map data for r-max
-    m = cm.ScalarMappable(cmap=cm.RdYlBu)
-    m.set_array(rm)
-
-    # Tidy and annotate
-    cb = fig.colorbar(m, ax=ax, shrink=0.8, aspect=8)
-    ax.set_zlim(
-        0,
-    )
-    ax.invert_zaxis()
-    cb.set_label("R-max")
-    ax.set_xlabel("X [km]")
-    ax.set_ylabel("Y [km]")
-    ax.set_zlabel("Depth [m]")
-
-    dx, dy = x[0, 1] - x[0, 0], y[1, 0] - y[0, 0]
-    title = title + " (dx={}, dy={})".format(dx, dy)
-    plt.title(title, fontweight="bold")
-    plt.show()
-'''
-
-
 def temperature_profile(depth: Union[xr.DataArray, float]) -> Union[np.ndarray, float]:
     """Compute the temperature (in °C) at a given depth (in metres).
 
@@ -269,31 +214,6 @@ def salinity_profile(depth: Union[xr.DataArray, float]) -> Union[np.ndarray, flo
     return salinity
 
 
-"""
-# Generate depth array
-depths = xr.DataArray(np.linspace(0, 6000, 1000), dims=["depth"], name="depth")
-# Compute profiles
-temperatures = temperature_profile(depths)
-salinities = salinity_profile(depths)
-# Plot profiles
-fig, ax1 = plt.subplots(figsize=(6, 8))
-ax1.plot(temperatures, depths, label='Temperature (°C)', color='red')
-ax1.set_xlabel('Temperature (°C)', color='red')
-ax1.set_xlim(-2, 25)
-ax1.set_ylim(6000, 0)
-ax1.invert_yaxis()
-ax1.tick_params(axis='x', labelcolor='red')
-ax2 = ax1.twiny()
-ax2.plot(salinities, depths, label='Salinity (PSU)', color='blue')
-ax2.set_xlabel('Salinity (PSU)', color='blue')
-ax2.set_xlim(30, 35)
-ax2.tick_params(axis='x', labelcolor='blue')
-# Add legends and title
-fig.suptitle('Typical Ocean Temperature and Salinity Profiles')
-plt.savefig('profile.png')
-"""
-
-
 def make_rand(ldepths, add_rand=True):
     if add_rand:
         return np.random.random(size=(ldepths)) / 4
@@ -332,7 +252,6 @@ def make_dataset(lx=450.0, ly=500, dx=10.0, dy=10.0, domain="half_bowl", max_dep
                 salinity_grid[t, :, j, i] = np.where(
                     depths < zt[j, i], salinity + make_rand(len(depths), add_rand=add_rand), 0
                 )
-    print(domain, temps_grid.shape)
     ds["temperature"] = (("time_counter", "depth", "y", "x"), temps_grid)
     ds["salinity"] = (("time_counter", "depth", "y", "x"), salinity_grid)
     grid = np.meshgrid(x[0] * 0.64 - 140, y[:, 0] * 0.36 - 90)
