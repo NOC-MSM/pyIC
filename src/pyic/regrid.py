@@ -1,5 +1,8 @@
 """Group of functions to regrid GRIDs to other variations."""
 
+import warnings
+
+import numpy as np
 import xarray as xr
 import xesmf as xe
 
@@ -209,13 +212,46 @@ def make_regridder(
     return regridder  # Return the created regridder
 
 
-def regrid_data(source_data, dest_grid=None, regridder=None):
+def vertical_regrid(dataset, vertical_coord, levels, method="linear", kwargs={}):
+    """Vertically regrid the dataset.
+
+    Regrid onto specified levels using preferred method of regridding (wraps xarray.Dataset.interp).
+    https://docs.xarray.dev/en/stable/generated/xarray.Dataset.interp.html
+
+    Args:
+        dataset (xr.Dataset): object to be verticaly regridded
+        vertical_coord (str): coordinate name of the vertical.
+        levels (array_like): levels to interpolate Dataset onto.
+        method (str): interpolation method (see xr documentation for more info).
+        kwargs (dict): other arguments to pass to xr.Dataset.interp.
+
+    Returns:
+        regridded xr.Dataset object.
+    """
+    if (
+        np.min(levels) < dataset[vertical_coord].values.min()
+        or np.max(levels) > dataset[vertical_coord].values.max()
+    ):
+        warnings.warn(
+            f"{vertical_coord} levels to interpolate on are outside levels in dataset. Dataset in range "
+            f"[{dataset[vertical_coord].values.min()},{dataset[vertical_coord].values.max()}]. "
+            f"Provided levels were in the range [{np.min(levels)},{np.max(levels)}]."
+            f"\nContinuing anyway, but this may result in peculiar extrapolation."
+        )
+    regridded = dataset.interp({vertical_coord: levels}, method=method, kwargs=kwargs)
+    return regridded
+
+
+def regrid_data(source_data, dest_grid=None, regridder=None, regrid_vertically=False, vertical_kwargs={}):
     """Regrid the source data onto the destination grid using the specified regridder.
 
     Args:
         source_data (GRID): The source data instance.
         dest_grid (GRID, optional): The destination grid instance.
         regridder (xesmf.Regridder, optional): The regridder object to use.
+        regrid_vertically (bool,optional): whether to regrid vertically
+        vertical_kwargs (dict, optional): dict containing arguments for vertical_regrid function.
+                                          Must contain "vertical_coord" and "levels" as a minimum.
 
     Returns:
         xarray.DataArray: The regridded data.
@@ -238,5 +274,24 @@ def regrid_data(source_data, dest_grid=None, regridder=None):
 
     # Use the regridder to transform the inset data to the destination grid
     dest_data = regridder(source_data.inset_ds)
+
+    if regrid_vertically:
+        vertical_coord = vertical_kwargs["vertical_coord"]
+        levels = vertical_kwargs["levels"]
+        if "method" not in vertical_kwargs:
+            method = "linear"
+        else:
+            method = vertical_kwargs["method"]
+
+        extra_kwargs = {}
+        for var in vertical_kwargs:
+            if var not in ["method", "levels", "vertical_coord"]:
+                extra_kwargs[var] = vertical_kwargs[var]
+        if vertical_coord in dest_data:
+            dest_data = vertical_regrid(
+                dest_data, vertical_coord, levels=levels, method=method, kwargs=extra_kwargs
+            )
+        else:
+            raise Exception(f"{vertical_coord} must be in destination.")
 
     return dest_data  # Return the regridded data
