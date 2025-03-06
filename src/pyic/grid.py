@@ -138,13 +138,12 @@ class GRID:
 
         return ds_grid  # Return the modified dataset with common coordinates
 
-    def vertical_regrid(self, ds_grid, z_kwargs, periodic=False):
-        print("Vertical regridding is still under construction. Use at your own risk.")
-        """Vertical regrid of data using xgcm's built in vertical regridder with their `Grid` class.
+    def vertical_convert(self, ds_grid, z_kwargs, periodic=False):
+        print("Vertical conversion is still under construction. Use at your own risk.")
+        """Vertical conversion of data using xgcm's built in vertical conversion with their `Grid` class.
 
         For this to work you will need:
-        data set on some metric of depth (let's say salinity)
-        a variable within the data set of your desired metric (depth in metres on salinity levels)
+        ds_grid: data set on some metric of depth (let's say salinity)
         z_kwargs: dict containing at least {'variable':str/list of strs,'target':array_like}.
                 Other arguments are as in the xgcm documentation:
                 https://xgcm.readthedocs.io/en/latest/transform.html?highlight=vertical
@@ -263,7 +262,7 @@ class GRID:
                                               If None, it will be inferred from common names.
             convert_to_z_grid (bool, optional): whether to convert from a sigma-level grid to
                                                 a z-level grid.
-            z_kwargs (dict, optional): additional details required for vertical regridding
+            z_kwargs (dict, optional): additional details required for vertical conversion
         """
         self.data_filename = data_filename  # Store the path to the dataset file
         self.lon_names = [
@@ -306,7 +305,8 @@ class GRID:
 
 
 def infill(arr_in, n_iter=None, bathy=None):
-    """TODO: INTEGRATE WITH CLASS PROPERLY. ADD ATTRIBUTION.
+    # taken from https://github.com/NOC-MSM/ORCHESTRA/blob/master/SCRIPTS/under_ice.py"
+    """TODO: INTEGRATE WITH CLASS PROPERLY.
 
     Returns data with any NaNs replaced by iteratively taking the geometric
     mean of surrounding points until all NaNs are removed or n_inter-ations

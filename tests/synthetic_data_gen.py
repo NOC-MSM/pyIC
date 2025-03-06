@@ -194,7 +194,7 @@ def temperature_profile(depth: Union[xr.DataArray, float]) -> Union[np.ndarray, 
 
 
 def salinity_profile(depth: Union[xr.DataArray, float]) -> Union[np.ndarray, float]:
-    """Compute the salinity (in PSU) at a given depth (in meters).
+    """Compute the salinity (in PSU) at a given depth (in metres).
 
     Parameters
     ----------
@@ -220,7 +220,7 @@ def make_rand(ldepths, add_rand=True):
     return 0
 
 
-def make_dataset(lx=450.0, ly=500, dx=10.0, dy=10.0, domain="half_bowl", max_depth=3600, times=2):
+def make_dataset(lx=450.0, ly=500, dx=10.0, dy=10.0, domain="half_bowl", max_depth=3600, z_sep=100, times=2):
     add_rand = False
     domain_types = ["half_bowl", "slope", "channel"]
     if domain not in domain_types:
@@ -232,7 +232,7 @@ def make_dataset(lx=450.0, ly=500, dx=10.0, dy=10.0, domain="half_bowl", max_dep
     if domain == "channel":
         x, y, zt, rm = channel()
     max_depth = max(max_depth, np.max(zt))
-    depths = np.arange(0, max_depth, 100)
+    depths = np.arange(0, max_depth, z_sep)
     ds = xr.Dataset(
         coords={"time_counter": np.arange(0, times, 1), "depth": depths, "y": y[:, 0], "x": x[0, :]}
     )
