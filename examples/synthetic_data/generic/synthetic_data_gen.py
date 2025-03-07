@@ -299,7 +299,7 @@ def make_rand(ldepths, add_rand=True):
     return 0
 
 
-def make_dataset(lx=450.0, ly=500, dx=10.0, dy=10.0, domain="half_bowl", max_depth=3600, times=2):
+def make_dataset(lx=450.0, ly=500, dx=10.0, dy=10.0, domain="half_bowl", max_depth=3600, z_sep=100, times=2):
     add_rand = False
     domain_types = ["half_bowl", "slope", "channel"]
     if domain not in domain_types:
@@ -311,7 +311,7 @@ def make_dataset(lx=450.0, ly=500, dx=10.0, dy=10.0, domain="half_bowl", max_dep
     if domain == "channel":
         x, y, zt, rm = channel()
     max_depth = max(max_depth, np.max(zt))
-    depths = np.arange(0, max_depth, 100)
+    depths = np.arange(0, max_depth, z_sep)
     ds = xr.Dataset(
         coords={"time_counter": np.arange(0, times, 1), "depth": depths, "y": y[:, 0], "x": x[0, :]}
     )
@@ -331,7 +331,6 @@ def make_dataset(lx=450.0, ly=500, dx=10.0, dy=10.0, domain="half_bowl", max_dep
                 salinity_grid[t, :, j, i] = np.where(
                     depths < zt[j, i], salinity + make_rand(len(depths), add_rand=add_rand), 0
                 )
-    print(domain, temps_grid.shape)
     ds["temperature"] = (("time_counter", "depth", "y", "x"), temps_grid)
     ds["salinity"] = (("time_counter", "depth", "y", "x"), salinity_grid)
     grid = np.meshgrid(x[0] * 0.64 - 140, y[:, 0] * 0.36 - 90)
