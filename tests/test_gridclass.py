@@ -27,7 +27,7 @@ def test_synthetic_regrid():
 
 
 def test_synthetic_vertical_regrid():
-    g1 = GRID(data_filename="ds1_32.nc", ds_lon_name="lon", ds_lat_name="lat")
+    g1 = GRID(data_filename="ds1_64.nc", ds_lon_name="lon", ds_lat_name="lat")
     g2 = GRID(data_filename="ds2.nc", ds_lon_name="lon", ds_lat_name="lat")
     regridder = make_regridder(g1, g2, check_superset=False)
     g1_regrid = regrid_data(
