@@ -1,4 +1,5 @@
 # based off IMMERSE_test_cases.ipynb
+# customised version of the file in examples/ used here for testing.
 
 # Import packages
 from typing import Union
@@ -280,6 +281,8 @@ def main():
     ds1_crop.to_netcdf("ds1_crop.nc")
     ds2.to_netcdf("ds2.nc")
     ds2_rgd.to_netcdf("ds2_rgd.nc")
+    ds1_64 = make_dataset(domain="half_bowl", max_depth=4096, z_sep=64)
+    ds1_64.to_netcdf("ds1_64.nc")
 
 
 if __name__ == "__main__":
