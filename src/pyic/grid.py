@@ -22,7 +22,7 @@ class GRID:
         """
         ds = xr.open_dataset(filename)
         if convert_to_z:
-            return self.vertical_regrid(ds, z_kwargs=z_kwargs)
+            return self.vertical_convert(ds, z_kwargs=z_kwargs)
         return ds
 
     def get_dim_varname(self, dimtype):
@@ -279,7 +279,7 @@ class GRID:
             self.ds = self.open_dataset(self.data_filename, convert_to_z_grid, z_kwargs)
         elif dataset is not None:
             if convert_to_z_grid:
-                self.ds = self.vertical_regrid(dataset, z_kwargs)
+                self.ds = self.vertical_convert(dataset, z_kwargs)
             else:
                 self.ds = dataset
         else:

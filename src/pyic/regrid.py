@@ -245,6 +245,9 @@ def vertical_regrid(dataset, vertical_coord, levels, method="linear", kwargs={})
 def regrid_data(source_data, dest_grid=None, regridder=None, regrid_vertically=False, vertical_kwargs={}):
     """Regrid the source data onto the destination grid using the specified regridder.
 
+    One of dest_grid or regridder must be provided.
+    If no regridder provided then one is made using the dest_grid.
+
     Args:
         source_data (GRID): The source data instance.
         dest_grid (GRID, optional): The destination grid instance.
@@ -276,9 +279,14 @@ def regrid_data(source_data, dest_grid=None, regridder=None, regrid_vertically=F
     dest_data = regridder(source_data.inset_ds)
 
     if regrid_vertically:
+        if "vertical_coord" not in vertical_kwargs:
+            raise Exception("Must specify vertical_coord in vertical_kwargs for vertical regridding.")
+        if "levels" not in vertical_kwargs:
+            raise Exception("Must specify levels in vertical_kwargs for vertical regridding.")
         vertical_coord = vertical_kwargs["vertical_coord"]
         levels = vertical_kwargs["levels"]
         if "method" not in vertical_kwargs:
+            warnings.warn("Vertical regridding method not specified, assuming linear interpolation.")
             method = "linear"
         else:
             method = vertical_kwargs["method"]
