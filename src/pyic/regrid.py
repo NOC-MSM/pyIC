@@ -275,10 +275,6 @@ def regrid_data(source_data, dest_grid=None, regridder=None, regrid_vertically=F
             raise Exception(
                 "Provide at least one of dest_grid or regridder."
             )  # Raise an error if neither is provided
-
-    # If the source data's inset is None, use the common grid as the inset
-    # if source_data.inset_ds is None:
-    #    source_data.inset_ds = source_data.common_grid
     if type(source_data) is str:
         source_data = xr.open_dataset(source_data)
     # Use the regridder to transform the inset data to the destination grid

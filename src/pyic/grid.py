@@ -137,11 +137,7 @@ class GRID:
             ds_grid = ds_grid.set_coords(coords)
         for var in ["lat", "lon"]:
             if ds_grid[var].ndim > 2:
-                # dims_to_squeeze = []
-                # for dim in list(ds_grid.dims):
-                #    if dim not in ["y", "x"]:
-                #        dims_to_squeeze.append(dim)
-                ds_grid = ds_grid.squeeze()  # dim=dims_to_squeeze)
+                ds_grid = ds_grid.squeeze()
         # Add bounds to the latitude and longitude coordinates for better spatial representation
         try:
             keys = ["lon", "lat"]
