@@ -103,10 +103,11 @@ class GRID:
             lat_name,
         )  # Return the longitude and latitude DataArrays and their names
 
-    def make_common_coords(self, lon_name, lat_name, time_counter="time_counter"):
+    def make_common_coords(self, z_name, lon_name, lat_name, time_counter="time_counter"):
         """Align the grid dataset with common coordinate names for regridding.
 
         Args:
+            z_name (str): name of the depth coordinate.
             lon_name (str): The name of the longitude coordinate.
             lat_name (str): The name of the latitude coordinate.
             time_counter (str, optional): The name of the time counter variable. Defaults to "time_counter".
@@ -114,23 +115,39 @@ class GRID:
         Returns:
             xarray.Dataset: The dataset with standardized coordinate names and attributes for regridding.
         """
-        ds_grid = self.ds.rename({lon_name: "lon", lat_name: "lat"})
+        coords = ["lat", "lon"]
+        if z_name is None:
+            ds_grid = self.ds.rename({lon_name: "lon", lat_name: "lat"})
+            ds_grid["z"] = ds_grid["z"].assign_attrs(units="m", standard_name="depth")
+        else:
+            ds_grid = self.ds.rename({z_name: "z", lon_name: "lon", lat_name: "lat"})
+            coords.append("z")
 
-        # Assign attributes to the latitude variable for clarity and standardization
-        ds_grid["lat"] = ds_grid["lat"].assign_attrs(units="degrees_north", standard_name="latitude")
-        # Assign attributes to the longitude variable for clarity and standardization
-        ds_grid["lon"] = ds_grid["lon"].assign_attrs(units="degrees_east", standard_name="longitude")
+            # Assign attributes to lat, lon and depth
+
+            ds_grid["lat"] = ds_grid["lat"].assign_attrs(units="degrees_north", standard_name="latitude")
+            ds_grid["lon"] = ds_grid["lon"].assign_attrs(units="degrees_east", standard_name="longitude")
+
         # Check if the time_counter variable exists in the dataset
         if time_counter in ds_grid:
             # If it exists, select the first time step
-            ds_grid = ds_grid.isel({time_counter: 0}).set_coords(("lat", "lon"))
+            ds_grid = ds_grid.isel({time_counter: 0}).set_coords(coords)
         else:
             # If it doesn't exist, simply rename the longitude and latitude variables
-            ds_grid = ds_grid.set_coords(("lat", "lon"))
-
+            ds_grid = ds_grid.set_coords(coords)
+        for var in ["lat", "lon"]:
+            if ds_grid[var].ndim > 2:
+                # dims_to_squeeze = []
+                # for dim in list(ds_grid.dims):
+                #    if dim not in ["y", "x"]:
+                #        dims_to_squeeze.append(dim)
+                ds_grid = ds_grid.squeeze()  # dim=dims_to_squeeze)
         # Add bounds to the latitude and longitude coordinates for better spatial representation
         try:
-            ds_grid = ds_grid.cf.add_bounds(keys=["lon", "lat"])
+            keys = ["lon", "lat"]
+            # if "z" in ds_grid.dims:
+            #    keys.append("z")
+            ds_grid = ds_grid.cf.add_bounds(keys=keys)
         except Exception as e:
             print("Couldn't add bounds.")
             print(e)
@@ -245,6 +262,7 @@ class GRID:
         dataset=None,
         ds_lon_name=None,
         ds_lat_name=None,
+        ds_z_name=None,
         ds_time_counter="time_counter",
         convert_to_z_grid=False,
         z_kwargs={},
@@ -258,8 +276,9 @@ class GRID:
                                           If None, it will be inferred from common names.
             ds_lat_name (str, optional): The name of the latitude variable in the dataset.
                                           If None, it will be inferred from common names.
-            ds_time_counter (str, optional): The name of the time counter variable in the dataset.
-                                              If None, it will be inferred from common names.
+            ds_z_name (str, optional): The name of the depth coordinate, assume z.
+            ds_time_counter (str, optional): The name of the time counter variable in the dataset,
+                                             assume time_counter.
             convert_to_z_grid (bool, optional): whether to convert from a sigma-level grid to
                                                 a z-level grid.
             z_kwargs (dict, optional): additional details required for vertical conversion
@@ -290,6 +309,7 @@ class GRID:
 
         # Create a common grid with standardized coordinate names
         self.common_grid = self.make_common_coords(
+            ds_z_name,
             ds_lon_name,
             ds_lat_name,
             ds_time_counter,

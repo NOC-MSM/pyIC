@@ -148,6 +148,7 @@ def is_superset_of(source_grid, destination_grid, return_indices=False, toleranc
 def make_regridder(
     source_grid,
     destination_grid,
+    landsea_mask=None,
     regrid_algorithm="bilinear",
     save_weights=None,
     reload_weights=None,
@@ -164,6 +165,7 @@ def make_regridder(
     Args:
         source_grid (GRID): The source grid instance.
         destination_grid (GRID): The destination grid instance.
+        landsea_mask (str): variable name of the landsea mask.
         regrid_algorithm (str): The regridding method to use (e.g., "bilinear", "conservative").
         save_weights (str, optional): Path to save the regridding weights.
         reload_weights (str, optional): Path to load existing regridding weights.
@@ -192,7 +194,10 @@ def make_regridder(
             make_subset(source_grid)
         else:
             source_grid.inset = source_grid.common_grid
-
+    if landsea_mask is None:
+        warnings.warn("landsea_mask is None. You may experience data interpolated over land.")
+    else:
+        source_grid.inset["mask"] = source_grid.inset[landsea_mask]
     # Create a regridder object using xesmf
     regridder = xe.Regridder(
         ds_in=source_grid.inset,  # Input dataset (subset of the source grid)
@@ -272,11 +277,12 @@ def regrid_data(source_data, dest_grid=None, regridder=None, regrid_vertically=F
             )  # Raise an error if neither is provided
 
     # If the source data's inset is None, use the common grid as the inset
-    if source_data.inset_ds is None:
-        source_data.inset_ds = source_data.common_grid
-
+    # if source_data.inset_ds is None:
+    #    source_data.inset_ds = source_data.common_grid
+    if type(source_data) is str:
+        source_data = xr.open_dataset(source_data)
     # Use the regridder to transform the inset data to the destination grid
-    dest_data = regridder(source_data.inset_ds)
+    dest_data = regridder(source_data)
 
     if regrid_vertically:
         if "vertical_coord" not in vertical_kwargs:
