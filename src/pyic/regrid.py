@@ -247,6 +247,24 @@ def vertical_regrid(dataset, vertical_coord, levels, method="linear", kwargs={})
     return regridded
 
 
+def e3_to_depth(pe3t, pe3w, jpk):
+    pdepw = np.zeros_like(pe3w)
+    pdepw[0, :] = 0.0
+    pdept = np.zeros_like(pe3t)
+    pdept[0, :] = 0.5 * pe3w[0, :]
+
+    for jk in np.arange(1, jpk, 1):
+        pdepw[jk, :] = pdepw[jk - 1, :] + pe3t[jk - 1, :]
+        pdept[jk, :] = pdept[jk - 1, :] + pe3w[jk, :]
+
+    return pdept, pdepw
+
+
+def regrid_vertical_grid(source_grid, dest_grid):
+    """Regrid vertically using e3 data"""
+    return source_grid
+
+
 def regrid_data(source_data, dest_grid=None, regridder=None, regrid_vertically=False, vertical_kwargs={}):
     """Regrid the source data onto the destination grid using the specified regridder.
 
