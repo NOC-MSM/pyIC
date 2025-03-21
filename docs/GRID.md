@@ -16,8 +16,6 @@ GRID has the following arguments:
 - `z_kwargs`: optional dict - arguments for vertical regridding. Must contain as a minimum `{'variable':'some_variable','target':xr.DataArray/np.array of levels to interpolate to}`.
 - `equation_of_state`: optional str - used to check that the equation of state for source and destination data is the same.
 
-
-
 You should provide one of `data_filename` or `dataset` for reasons that should be obvious: we need gridded data for the GRID objects.
 
 ## Vertical regridding
