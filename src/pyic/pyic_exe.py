@@ -10,9 +10,12 @@ def main():
         description="pyIC: Generate initial conditions for regional NEMO configurations out of the box.",
         epilog="Detailed documentation available at https://noc-msm.github.io/pyIC/.",
     )
-    parser.add_argument("source", help="path to source grid file")
-    parser.add_argument("destination", help="path to destination grid file")
-    parser.add_argument("data", help="path to data to be regridded")
+    parser.add_argument("--source", "-s", help="path to source grid file")
+    parser.add_argument("--destination", "-d", help="path to destination grid file")
+    parser.add_argument("--in_data", "-i", help="path to data to be regridded")
+    parser.add_argument(
+        "--out_path", "-o", nargs="?", const="regridded.nc", help="path to write regridded data to"
+    )
     args = parser.parse_args()
     grid1 = GRID(
         data_filename=args.source,
@@ -29,8 +32,8 @@ def main():
         ds_z_name="z",
     )
     regridder = make_regridder(grid1, grid2, save_weights="weights.nc", landsea_mask="tmask")
-    grid1_regrid = regrid_data(args.data, regridder=regridder)
-    grid1_regrid.to_netcdf("regridded.nc")
+    grid1_regrid = regrid_data(args.in_data, regridder=regridder)
+    grid1_regrid.to_netcdf(args.out_path)
 
 
 if __name__ == "__main__":

@@ -1,5 +1,6 @@
 """Group of functions to regrid GRIDs to other variations."""
 
+import copy as cp
 import warnings
 
 import numpy as np
@@ -247,7 +248,82 @@ def vertical_regrid(dataset, vertical_coord, levels, method="linear", kwargs={})
     return regridded
 
 
-def regrid_data(source_data, dest_grid=None, regridder=None, regrid_vertically=False, vertical_kwargs={}):
+def infill(arr_in, n_iter=None, bathy=None):
+    # taken from https://github.com/NOC-MSM/ORCHESTRA/blob/master/SCRIPTS/under_ice.py"
+    """TODO: INTEGRATE WITH CLASS PROPERLY.
+
+    Returns data with any NaNs replaced by iteratively taking the geometric
+    mean of surrounding points until all NaNs are removed or n_inter-ations
+    have been performed. Input data must be 2D and can include a
+    bathymetry array as to provide land barriers to the infilling.
+
+    Args:
+        arr_in          (ndarray): data array 2D
+        n_iter              (int): number of smoothing iterations
+        bathy           (ndarray): bathymetry array (land set to zero)
+
+    Returns
+    -------
+        arr_mod         (ndarray): modified data array
+    """
+    # Check number of dims
+    if arr_in.ndim != 2:
+        raise ValueError("Array must have two dimensions")
+
+    # Intial setup to prime things for the averaging loop
+    if bathy is None:
+        bathy = np.ones_like(arr_in, dtype=float)
+    if n_iter is None:
+        n_iter = np.inf
+    ind = np.where(np.logical_and(np.isnan(arr_in), np.greater(bathy, 0.0)))
+    counter = 0
+    jpj, jpi = arr_in.shape
+    # Infill until all NaNs are removed or N interations completed
+    while np.sum(ind) > 0 and counter < n_iter:
+        # TODO: include a check to see if number of NaNs is decreasing
+
+        # Create indices of neighbouring points
+        ind_e = cp.deepcopy(ind)
+        ind_w = cp.deepcopy(ind)
+        ind_n = cp.deepcopy(ind)
+        ind_s = cp.deepcopy(ind)
+
+        ind_e[1][:] = np.minimum(ind_e[1][:] + 1, jpi - 1)
+        ind_w[1][:] = np.maximum(ind_w[1][:] - 1, 0)
+        ind_n[0][:] = np.minimum(ind_n[0][:] + 1, jpj - 1)
+        ind_s[0][:] = np.maximum(ind_s[0][:] - 1, 0)
+
+        # Replace NaNs
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", category=RuntimeWarning)
+            arr_in[ind] = np.nanmean(
+                np.vstack((arr_in[ind_e], arr_in[ind_w], arr_in[ind_n], arr_in[ind_s])),
+                axis=0,
+            )
+
+        # Find new indices for next loop
+        ind = np.where(np.logical_and(np.isnan(arr_in), np.greater(bathy, 0.0)))
+        counter += 1
+
+    return arr_in
+
+
+def test_wet_points_populated(regridded_ds, dest_mask):
+    for var in regridded_ds:
+        if np.sum(regridded_ds[var] != np.nan) != np.sum(dest_mask):
+            warnings.warn(f"Missing interpolated data for variable {var}. Floodfilling...")
+            regridded_ds[var].values = infill(regridded_ds[var].values)
+    return regridded_ds
+
+
+def regrid_data(
+    source_data,
+    dest_grid=None,
+    regridder=None,
+    regrid_vertically=False,
+    vertical_kwargs={},
+    dest_grid_mask=None,
+):
     """Regrid the source data onto the destination grid using the specified regridder.
 
     One of dest_grid or regridder must be provided.
@@ -262,7 +338,7 @@ def regrid_data(source_data, dest_grid=None, regridder=None, regrid_vertically=F
                                           Must contain "vertical_coord" and "levels" as a minimum.
 
     Returns:
-        xarray.DataArray: The regridded data.
+        xarray.Dataset: The regridded data.
 
     Raises:
         Exception: If neither dest_grid nor regridder is provided.
@@ -279,6 +355,8 @@ def regrid_data(source_data, dest_grid=None, regridder=None, regrid_vertically=F
         source_data = xr.open_dataset(source_data)
     # Use the regridder to transform the inset data to the destination grid
     dest_data = regridder(source_data)
+    if dest_grid_mask is not None:
+        dest_data = test_wet_points_populated(dest_data, dest_grid[dest_grid_mask])
 
     if regrid_vertically:
         if "vertical_coord" not in vertical_kwargs:
