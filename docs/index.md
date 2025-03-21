@@ -65,14 +65,12 @@ pyIC revolves around its `GRID` class, which takes a gridded data set as input (
 A basic example is included within the `pyic_exe.py` script and can be run from the command line. Further arguments are required to specify x, y, depth if they are not on a list of commonly inferred ones.
 
 ```sh
-python pyic_exe.py file1.nc file2.nc
+python pyic_exe.py --source /path/to/source/grid.nc --destination /path/to/destination/grid.nc --in_data /path/to/source/data.nc --out_path /path/to/destination/regridded_data.nc
 ```
 
-or
+These flags can be simplified to `-s`, `-d`, `-i` and `-o` respectively.
 
-```
-pyic file1.nc file2.nc
-```
+`--out_path` is optional and will be assumed to be `regridded.nc` if it is not passed to `pyic_exe.py`.
 
 ### Example scripts
 
