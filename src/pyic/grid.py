@@ -1,4 +1,3 @@
-import copy as cp
 import warnings
 
 import cf_xarray
@@ -103,10 +102,11 @@ class GRID:
             lat_name,
         )  # Return the longitude and latitude DataArrays and their names
 
-    def make_common_coords(self, lon_name, lat_name, time_counter="time_counter"):
+    def make_common_coords(self, z_name, lon_name, lat_name, time_counter="time_counter"):
         """Align the grid dataset with common coordinate names for regridding.
 
         Args:
+            z_name (str): name of the depth coordinate.
             lon_name (str): The name of the longitude coordinate.
             lat_name (str): The name of the latitude coordinate.
             time_counter (str, optional): The name of the time counter variable. Defaults to "time_counter".
@@ -114,23 +114,35 @@ class GRID:
         Returns:
             xarray.Dataset: The dataset with standardized coordinate names and attributes for regridding.
         """
-        ds_grid = self.ds.rename({lon_name: "lon", lat_name: "lat"})
+        coords = ["lat", "lon"]
+        if z_name is None:
+            ds_grid = self.ds.rename({lon_name: "lon", lat_name: "lat"})
+            ds_grid["z"] = ds_grid["z"].assign_attrs(units="m", standard_name="depth")
+        else:
+            ds_grid = self.ds.rename({z_name: "z", lon_name: "lon", lat_name: "lat"})
+            # coords.append("z")
 
-        # Assign attributes to the latitude variable for clarity and standardization
-        ds_grid["lat"] = ds_grid["lat"].assign_attrs(units="degrees_north", standard_name="latitude")
-        # Assign attributes to the longitude variable for clarity and standardization
-        ds_grid["lon"] = ds_grid["lon"].assign_attrs(units="degrees_east", standard_name="longitude")
+            # Assign attributes to lat, lon and depth
+
+            ds_grid["lat"] = ds_grid["lat"].assign_attrs(units="degrees_north", standard_name="latitude")
+            ds_grid["lon"] = ds_grid["lon"].assign_attrs(units="degrees_east", standard_name="longitude")
+
         # Check if the time_counter variable exists in the dataset
         if time_counter in ds_grid:
             # If it exists, select the first time step
-            ds_grid = ds_grid.isel({time_counter: 0}).set_coords(("lat", "lon"))
+            ds_grid = ds_grid.isel({time_counter: 0}).set_coords(coords)
         else:
             # If it doesn't exist, simply rename the longitude and latitude variables
-            ds_grid = ds_grid.set_coords(("lat", "lon"))
-
+            ds_grid = ds_grid.set_coords(coords)
+        for var in ["lat", "lon"]:
+            if ds_grid[var].ndim > 2:
+                ds_grid = ds_grid.squeeze()
         # Add bounds to the latitude and longitude coordinates for better spatial representation
         try:
-            ds_grid = ds_grid.cf.add_bounds(keys=["lon", "lat"])
+            keys = ["lon", "lat"]
+            # if "z" in ds_grid.dims:
+            #    keys.append("z")
+            ds_grid = ds_grid.cf.add_bounds(keys=keys)
         except Exception as e:
             print("Couldn't add bounds.")
             print(e)
@@ -245,6 +257,7 @@ class GRID:
         dataset=None,
         ds_lon_name=None,
         ds_lat_name=None,
+        ds_z_name=None,
         ds_time_counter="time_counter",
         convert_to_z_grid=False,
         z_kwargs={},
@@ -258,8 +271,9 @@ class GRID:
                                           If None, it will be inferred from common names.
             ds_lat_name (str, optional): The name of the latitude variable in the dataset.
                                           If None, it will be inferred from common names.
-            ds_time_counter (str, optional): The name of the time counter variable in the dataset.
-                                              If None, it will be inferred from common names.
+            ds_z_name (str, optional): The name of the depth coordinate, assume z.
+            ds_time_counter (str, optional): The name of the time counter variable in the dataset,
+                                             assume time_counter.
             convert_to_z_grid (bool, optional): whether to convert from a sigma-level grid to
                                                 a z-level grid.
             z_kwargs (dict, optional): additional details required for vertical conversion
@@ -290,6 +304,7 @@ class GRID:
 
         # Create a common grid with standardized coordinate names
         self.common_grid = self.make_common_coords(
+            ds_z_name,
             ds_lon_name,
             ds_lat_name,
             ds_time_counter,
@@ -302,63 +317,3 @@ class GRID:
         self.inset = None  # Placeholder for inset data
         self.inset_ds = None
         self.lon_bool, self.lat_bool = None, None  # Boolean flags for longitude and latitude checks
-
-
-def infill(arr_in, n_iter=None, bathy=None):
-    # taken from https://github.com/NOC-MSM/ORCHESTRA/blob/master/SCRIPTS/under_ice.py"
-    """TODO: INTEGRATE WITH CLASS PROPERLY.
-
-    Returns data with any NaNs replaced by iteratively taking the geometric
-    mean of surrounding points until all NaNs are removed or n_inter-ations
-    have been performed. Input data must be 2D and can include a
-    bathymetry array as to provide land barriers to the infilling.
-
-    Args:
-        arr_in          (ndarray): data array 2D
-        n_iter              (int): number of smoothing iterations
-        bathy           (ndarray): bathymetry array (land set to zero)
-
-    Returns
-    -------
-        arr_mod         (ndarray): modified data array
-    """
-    # Check number of dims
-    if arr_in.ndim != 2:
-        raise ValueError("Array must have two dimensions")
-
-    # Intial setup to prime things for the averaging loop
-    if bathy is None:
-        bathy = np.ones_like(arr_in, dtype=float)
-    if n_iter is None:
-        n_iter = np.inf
-    ind = np.where(np.logical_and(np.isnan(arr_in), np.greater(bathy, 0.0)))
-    counter = 0
-    jpj, jpi = arr_in.shape
-    # Infill until all NaNs are removed or N interations completed
-    while np.sum(ind) > 0 and counter < n_iter:
-        # TODO: include a check to see if number of NaNs is decreasing
-
-        # Create indices of neighbouring points
-        ind_e = cp.deepcopy(ind)
-        ind_w = cp.deepcopy(ind)
-        ind_n = cp.deepcopy(ind)
-        ind_s = cp.deepcopy(ind)
-
-        ind_e[1][:] = np.minimum(ind_e[1][:] + 1, jpi - 1)
-        ind_w[1][:] = np.maximum(ind_w[1][:] - 1, 0)
-        ind_n[0][:] = np.minimum(ind_n[0][:] + 1, jpj - 1)
-        ind_s[0][:] = np.maximum(ind_s[0][:] - 1, 0)
-
-        # Replace NaNs
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore", category=RuntimeWarning)
-            arr_in[ind] = np.nanmean(
-                np.vstack((arr_in[ind_e], arr_in[ind_w], arr_in[ind_n], arr_in[ind_s])),
-                axis=0,
-            )
-
-        # Find new indices for next loop
-        ind = np.where(np.logical_and(np.isnan(arr_in), np.greater(bathy, 0.0)))
-        counter += 1
-
-    return arr_in
