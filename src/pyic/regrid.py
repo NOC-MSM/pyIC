@@ -181,6 +181,12 @@ def make_regridder(
     Returns:
         xesmf.Regridder: The regridder object for transforming data.
     """
+    if source_grid.eos != destination_grid.eos:
+        warnings.warn(
+            f"Equation of state of source grid ({source_grid.eos})"
+            + f"does not match destination grid ({destination_grid.eos})."
+        )
+
     if force or (not (use_inset or check_superset)):
         # If forced, use the entire common grid as the inset
         source_grid.inset = source_grid.common_grid

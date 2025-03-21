@@ -261,6 +261,7 @@ class GRID:
         ds_time_counter="time_counter",
         convert_to_z_grid=False,
         z_kwargs={},
+        equation_of_state=None,
     ):
         """Initialize the GRID class with the specified dataset and coordinate names.
 
@@ -277,6 +278,7 @@ class GRID:
             convert_to_z_grid (bool, optional): whether to convert from a sigma-level grid to
                                                 a z-level grid.
             z_kwargs (dict, optional): additional details required for vertical conversion
+            equation_of_state (str, optional): the equation of state of the data.
         """
         self.data_filename = data_filename  # Store the path to the dataset file
         self.lon_names = [
@@ -317,3 +319,7 @@ class GRID:
         self.inset = None  # Placeholder for inset data
         self.inset_ds = None
         self.lon_bool, self.lat_bool = None, None  # Boolean flags for longitude and latitude checks
+
+        self.eos = equation_of_state
+        if self.eos is None:
+            warnings.warn("No equation of state given.")
