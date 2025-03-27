@@ -231,14 +231,14 @@ def vertical_regrid(dataset, vertical_coord, levels, method="linear", kwargs={})
     https://docs.xarray.dev/en/stable/generated/xarray.Dataset.interp.html
 
     Args:
-        dataset (xr.Dataset): object to be verticaly regridded
+        dataset (xarray.Dataset): object to be verticaly regridded
         vertical_coord (str): coordinate name of the vertical.
         levels (array_like): levels to interpolate Dataset onto.
         method (str): interpolation method (see xr documentation for more info).
-        kwargs (dict): other arguments to pass to xr.Dataset.interp.
+        kwargs (dict): other arguments to pass to xarray.Dataset.interp.
 
     Returns:
-        regridded xr.Dataset object.
+        regridded xarray.Dataset object.
     """
     if (
         np.min(levels) < dataset[vertical_coord].values.min()
@@ -255,8 +255,7 @@ def vertical_regrid(dataset, vertical_coord, levels, method="linear", kwargs={})
 
 
 def infill(arr_in, n_iter=None, bathy=None):
-    # taken from https://github.com/NOC-MSM/ORCHESTRA/blob/master/SCRIPTS/under_ice.py"
-    """TODO: INTEGRATE WITH CLASS PROPERLY.
+    """Floodfill missing data.
 
     Returns data with any NaNs replaced by iteratively taking the geometric
     mean of surrounding points until all NaNs are removed or n_inter-ations
@@ -268,10 +267,10 @@ def infill(arr_in, n_iter=None, bathy=None):
         n_iter              (int): number of smoothing iterations
         bathy           (ndarray): bathymetry array (land set to zero)
 
-    Returns
-    -------
+    Returns:
         arr_mod         (ndarray): modified data array
     """
+    # taken from https://github.com/NOC-MSM/ORCHESTRA/blob/master/SCRIPTS/under_ice.py"
     # Check number of dims
     if arr_in.ndim != 2:
         raise ValueError("Array must have two dimensions")
@@ -315,6 +314,15 @@ def infill(arr_in, n_iter=None, bathy=None):
 
 
 def test_wet_points_populated(regridded_ds, dest_mask):
+    """Test that wet points have been populated after regridding.
+
+    Args:
+        regridded_ds (xarray.Dataset): regridded dataset object
+        dest_mask (ndarray): landsea mask for destination grid
+
+    Returns:
+        regridded_ds (xarray.Dataset): regridded dataset object, infill function used if data are missing.
+    """
     for var in regridded_ds:
         if np.sum(regridded_ds[var] != np.nan) != np.sum(dest_mask):
             warnings.warn(f"Missing interpolated data for variable {var}. Floodfilling...")

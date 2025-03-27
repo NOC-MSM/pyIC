@@ -1,6 +1,6 @@
 <!-- markdownlint-disable -->
 
-<a href="../src/pyic/regrid.py#L0"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
+<a href="../../src/pyic/regrid.py#L0"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
 
 # <kbd>module</kbd> `regrid`
 
@@ -8,7 +8,7 @@ Group of functions to regrid GRIDs to other variations.
 
 ---
 
-<a href="../src/pyic/regrid.py#L11"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
+<a href="../../src/pyic/regrid.py#L11"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
 
 ## <kbd>function</kbd> `make_subset_and_mask`
 
@@ -25,7 +25,7 @@ Create a subset of the source grid that matches the area of the destination grid
 
 ---
 
-<a href="../src/pyic/regrid.py#L24"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
+<a href="../../src/pyic/regrid.py#L24"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
 
 ## <kbd>function</kbd> `subset_mask`
 
@@ -47,7 +47,7 @@ Create a mask for the source grid that covers the same area as the destination g
 
 ---
 
-<a href="../src/pyic/regrid.py#L53"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
+<a href="../../src/pyic/regrid.py#L53"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
 
 ## <kbd>function</kbd> `make_subset`
 
@@ -69,7 +69,7 @@ Create a subset of the source grid based on the provided longitude and latitude 
 
 ---
 
-<a href="../src/pyic/regrid.py#L87"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
+<a href="../../src/pyic/regrid.py#L87"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
 
 ## <kbd>function</kbd> `is_superset_of`
 
@@ -96,7 +96,7 @@ Check if the source grid is a superset of the destination grid.
 
 ---
 
-<a href="../src/pyic/regrid.py#L149"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
+<a href="../../src/pyic/regrid.py#L149"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
 
 ## <kbd>function</kbd> `make_regridder`
 
@@ -141,7 +141,7 @@ Create a regridder to transform the source grid onto the destination grid.
 
 ---
 
-<a href="../src/pyic/regrid.py#L227"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
+<a href="../../src/pyic/regrid.py#L227"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
 
 ## <kbd>function</kbd> `vertical_regrid`
 
@@ -155,18 +155,18 @@ Regrid onto specified levels using preferred method of regridding (wraps xarray.
 
 **Args:**
 
-- <b>`dataset`</b> (xr.Dataset): object to be verticaly regridded
+- <b>`dataset`</b> (xarray.Dataset): object to be verticaly regridded
 - <b>`vertical_coord`</b> (str): coordinate name of the vertical.
 - <b>`levels`</b> (array_like): levels to interpolate Dataset onto.
 - <b>`method`</b> (str): interpolation method (see xr documentation for more info).
-- <b>`kwargs`</b> (dict): other arguments to pass to xr.Dataset.interp.
+- <b>`kwargs`</b> (dict): other arguments to pass to xarray.Dataset.interp.
 
 **Returns:**
-regridded xr.Dataset object.
+regridded xarray.Dataset object.
 
 ---
 
-<a href="../src/pyic/regrid.py#L257"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
+<a href="../../src/pyic/regrid.py#L257"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
 
 ## <kbd>function</kbd> `infill`
 
@@ -174,7 +174,7 @@ regridded xr.Dataset object.
 infill(arr_in, n_iter=None, bathy=None)
 ```
 
-TODO: INTEGRATE WITH CLASS PROPERLY.
+Floodfill missing data.
 
 Returns data with any NaNs replaced by iteratively taking the geometric mean of surrounding points until all NaNs are removed or n_inter-ations have been performed. Input data must be 2D and can include a bathymetry array as to provide land barriers to the infilling.
 
@@ -184,13 +184,13 @@ Returns data with any NaNs replaced by iteratively taking the geometric mean of 
 - <b>`n_iter`</b> (int): number of smoothing iterations
 - <b>`bathy`</b> (ndarray): bathymetry array (land set to zero)
 
-## Returns
+**Returns:**
 
 - <b>`arr_mod`</b> (ndarray): modified data array
 
 ---
 
-<a href="../src/pyic/regrid.py#L317"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
+<a href="../../src/pyic/regrid.py#L316"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
 
 ## <kbd>function</kbd> `test_wet_points_populated`
 
@@ -198,9 +198,20 @@ Returns data with any NaNs replaced by iteratively taking the geometric mean of 
 test_wet_points_populated(regridded_ds, dest_mask)
 ```
 
+Test that wet points have been populated after regridding.
+
+**Args:**
+
+- <b>`regridded_ds`</b> (xarray.Dataset): regridded dataset object
+- <b>`dest_mask`</b> (ndarray): landsea mask for destination grid
+
+**Returns:**
+
+- <b>`regridded_ds`</b> (xarray.Dataset): regridded dataset object, infill function used if data are missing.
+
 ---
 
-<a href="../src/pyic/regrid.py#L325"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
+<a href="../../src/pyic/regrid.py#L333"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
 
 ## <kbd>function</kbd> `regrid_data`
 

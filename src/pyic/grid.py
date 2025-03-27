@@ -13,8 +13,8 @@ class GRID:
 
         Args:
             filename (str): The path to the dataset file.
-            convert_to_z (bool)
-            zkawrgs (dict)
+            convert_to_z (bool): whether to convert data to a z grid
+            z_kwargs (dict): arguments for vertical conversion
 
         Returns:
             xarray.Dataset: The opened dataset.
@@ -151,18 +151,20 @@ class GRID:
         return ds_grid  # Return the modified dataset with common coordinates
 
     def vertical_convert(self, ds_grid, z_kwargs, periodic=False):
-        print("Vertical conversion is still under construction. Use at your own risk.")
         """Vertical conversion of data using xgcm's built in vertical conversion with their `Grid` class.
 
-        For this to work you will need:
-        ds_grid: data set on some metric of depth (let's say salinity)
-        z_kwargs: dict containing at least {'variable':str/list of strs,'target':array_like}.
+        Args:
+            ds_grid (xarray.Dataset): data set on some metric of depth (let's say salinity)
+            z_kwargs (dict): dict containing at least {'variable':str/list of strs,'target':array_like}.
                 Other arguments are as in the xgcm documentation:
                 https://xgcm.readthedocs.io/en/latest/transform.html?highlight=vertical
-        periodic: bool, passed to xgcm.Grid.
+            periodic (bool): passed to xgcm.Grid.
 
-        returns vertically regridded data set.
+
+        Returns:
+            xarray.Dataset: Vertically regridded data set.
         """
+        print("Vertical conversion is still under construction. Use at your own risk.")
 
         from xgcm import Grid as xgcm_grid
 
@@ -267,7 +269,7 @@ class GRID:
 
         Args:
             data_filename (str, optional): Path to the dataset file on the desired grid.
-            dataset (xr.Dataset, optional): xarray Dataset object
+            dataset (xarray.Dataset, optional): xarray Dataset object
             ds_lon_name (str, optional): The name of the longitude variable in the dataset.
                                           If None, it will be inferred from common names.
             ds_lat_name (str, optional): The name of the latitude variable in the dataset.

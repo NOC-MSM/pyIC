@@ -5,6 +5,12 @@ from pyic.regrid import make_regridder, regrid_data
 
 
 def main():
+    """Call pyic from the command line for simple regridding tasks.
+
+    Requires arguments for the source and destination grids,
+    and the data to be regridded from the source to the destination grid.
+
+    """
     parser = argparse.ArgumentParser(
         prog="pyic",
         description="pyIC: Generate initial conditions for regional NEMO configurations out of the box.",
