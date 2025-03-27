@@ -1,18 +1,18 @@
 <!-- markdownlint-disable -->
 
-<a href="../src/pyic/grid.py#L0"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
+<a href="../../src/pyic/grid.py#L0"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
 
 # <kbd>module</kbd> `grid`
 
 ---
 
-<a href="../src/pyic/grid.py#L8"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
+<a href="../../src/pyic/grid.py#L8"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
 
 ## <kbd>class</kbd> `GRID`
 
 Class that provides methods to handle and regrid gridded datasets for NEMO.
 
-<a href="../src/pyic/grid.py#L254"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
+<a href="../../src/pyic/grid.py#L256"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
 
 ### <kbd>method</kbd> `__init__`
 
@@ -35,7 +35,7 @@ Initialize the GRID class with the specified dataset and coordinate names.
 **Args:**
 
 - <b>`data_filename`</b> (str, optional): Path to the dataset file on the desired grid.
-- <b>`dataset`</b> (xr.Dataset, optional): xarray Dataset object
+- <b>`dataset`</b> (xarray.Dataset, optional): xarray Dataset object
 - <b>`ds_lon_name`</b> (str, optional): The name of the longitude variable in the dataset. If None, it will be inferred from common names.
 - <b>`ds_lat_name`</b> (str, optional): The name of the latitude variable in the dataset. If None, it will be inferred from common names.
 - <b>`ds_z_name`</b> (str, optional): The name of the depth coordinate, assume z.
@@ -46,7 +46,7 @@ Initialize the GRID class with the specified dataset and coordinate names.
 
 ---
 
-<a href="../src/pyic/grid.py#L56"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
+<a href="../../src/pyic/grid.py#L56"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
 
 ### <kbd>method</kbd> `extract_lonlat`
 
@@ -71,7 +71,7 @@ Extract longitude and latitude data arrays from the dataset.
 
 ---
 
-<a href="../src/pyic/grid.py#L27"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
+<a href="../../src/pyic/grid.py#L27"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
 
 ### <kbd>method</kbd> `get_dim_varname`
 
@@ -95,7 +95,7 @@ Retrieve the variable name corresponding to a specified dimension type (longitud
 
 ---
 
-<a href="../src/pyic/grid.py#L105"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
+<a href="../../src/pyic/grid.py#L105"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
 
 ### <kbd>method</kbd> `make_common_coords`
 
@@ -118,7 +118,7 @@ Align the grid dataset with common coordinate names for regridding.
 
 ---
 
-<a href="../src/pyic/grid.py#L11"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
+<a href="../../src/pyic/grid.py#L11"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
 
 ### <kbd>method</kbd> `open_dataset`
 
@@ -130,7 +130,9 @@ Open a dataset from a specified filename using xarray.
 
 **Args:**
 
-- <b>`filename`</b> (str): The path to the dataset file. convert_to_z (bool) zkawrgs (dict)
+- <b>`filename`</b> (str): The path to the dataset file.
+- <b>`convert_to_z`</b> (bool): whether to convert data to a z grid
+- <b>`z_kwargs`</b> (dict): arguments for vertical conversion
 
 **Returns:**
 
@@ -138,13 +140,26 @@ Open a dataset from a specified filename using xarray.
 
 ---
 
-<a href="../src/pyic/grid.py#L153"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
+<a href="../../src/pyic/grid.py#L153"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
 
 ### <kbd>method</kbd> `vertical_convert`
 
 ```python
 vertical_convert(ds_grid, z_kwargs, periodic=False)
 ```
+
+Vertical conversion of data using xgcm's built in vertical conversion with their `Grid` class.
+
+**Args:**
+
+- <b>`ds_grid`</b> (xarray.Dataset): data set on some metric of depth (let's say salinity)
+- <b>`z_kwargs`</b> (dict): dict containing at least {'variable':str/list of strs,'target':array_like}. Other arguments are as in the xgcm documentation:
+- <b>`https`</b>: //xgcm.readthedocs.io/en/latest/transform.html?highlight=vertical
+- <b>`periodic`</b> (bool): passed to xgcm.Grid.
+
+**Returns:**
+
+- <b>`xarray.Dataset`</b>: Vertically regridded data set.
 
 ---
 
