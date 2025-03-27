@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+    <url>
+         <loc>https://noc-msm.github.io/pyIC/</loc>
+         <lastmod>2025-03-27</lastmod>
+    </url>
+    <url>
+         <loc>https://noc-msm.github.io/pyIC/GRID/</loc>
+         <lastmod>2025-03-27</lastmod>
+    </url>
+    <url>
+         <loc>https://noc-msm.github.io/pyIC/regrid/</loc>
+         <lastmod>2025-03-27</lastmod>
+    </url>
+    <url>
+         <loc>https://noc-msm.github.io/pyIC/references/grid/</loc>
+         <lastmod>2025-03-27</lastmod>
+    </url>
+    <url>
+         <loc>https://noc-msm.github.io/pyIC/references/pyic_exe/</loc>
+         <lastmod>2025-03-27</lastmod>
+    </url>
+    <url>
+         <loc>https://noc-msm.github.io/pyIC/references/regrid/</loc>
+         <lastmod>2025-03-27</lastmod>
+    </url>
+</urlset>
