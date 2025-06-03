@@ -1,4 +1,4 @@
-# Use the IMMERSE_test_cases notebook to generate synthetic data (or your own)
+# Use the synthetic_data_gen.py script to generate synthetic data (or use your own)
 
 # make sure you have installed pyic as a package using `pip install -e .` on the pyIC directory.
 import xarray as xr
