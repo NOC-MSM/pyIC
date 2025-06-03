@@ -117,9 +117,13 @@ class GRID:
         coords = ["lat", "lon"]
         if z_name is None:
             ds_grid = self.ds.rename({lon_name: "lon", lat_name: "lat"})
+            warnings.warn("No ds_z_name given, assuming 'z'.")
             ds_grid["z"] = ds_grid["z"].assign_attrs(units="m", standard_name="depth")
         else:
-            ds_grid = self.ds.rename({z_name: "z", lon_name: "lon", lat_name: "lat"})
+            if z_name in self.ds:
+                ds_grid = self.ds.rename({z_name: "z", lon_name: "lon", lat_name: "lat"})
+            else:
+                raise Exception(f"{z_name} not in dataset.")
             # coords.append("z")
 
             # Assign attributes to lat, lon and depth
