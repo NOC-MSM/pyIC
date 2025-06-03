@@ -19,6 +19,7 @@ regrid1 = regrid.make_regridder(
     regrid_algorithm="bilinear",
     save_weights="~/NCMRWF/regrid_weights_bilinear.nc",
     use_inset=False,
+    landsea_mask="tmask",
 )
 
 regridded_T = regrid.regrid_data(src_data, regridder=regrid1)

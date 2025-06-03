@@ -117,9 +117,13 @@ class GRID:
         coords = ["lat", "lon"]
         if z_name is None:
             ds_grid = self.ds.rename({lon_name: "lon", lat_name: "lat"})
+            warnings.warn("No ds_z_name given, assuming 'z'.")
             ds_grid["z"] = ds_grid["z"].assign_attrs(units="m", standard_name="depth")
         else:
-            ds_grid = self.ds.rename({z_name: "z", lon_name: "lon", lat_name: "lat"})
+            if z_name in self.ds or z_name in self.ds.dims:
+                ds_grid = self.ds.rename({z_name: "z", lon_name: "lon", lat_name: "lat"})
+            else:
+                raise Exception(f"{z_name} not in dataset.")
             # coords.append("z")
 
             # Assign attributes to lat, lon and depth
@@ -164,7 +168,7 @@ class GRID:
         Returns:
             xarray.Dataset: Vertically regridded data set.
         """
-        print("Vertical conversion is still under construction. Use at your own risk.")
+        warnings.warn("Vertical conversion is still under construction. Use at your own risk.")
 
         from xgcm import Grid as xgcm_grid
 
@@ -195,9 +199,10 @@ class GRID:
         if method not in available_methods:
             raise Exception(f"Cannot use regridding method {method}. Choose one of {available_methods}.")
         # optional argument handling
-        for optional_arg in ["mask_edges", "bypass_checks", "suffix"]:
+        default_kwargs = {"mask_edges": True, "bypass_checks": False, "suffix": ""}
+        for optional_arg in default_kwargs:
             if optional_arg not in z_kwargs:
-                z_kwargs[optional_arg] = None
+                z_kwargs[optional_arg] = default_kwargs[optional_arg]
 
         # setup xgcm Grid
         xgrid = xgcm_grid(
@@ -211,17 +216,20 @@ class GRID:
         ds_out = xr.Dataset()
         if type(z_kwargs["variable"]) is list:
             for var in z_kwargs["variable"]:
-                da_grid = xgrid.transform(
-                    da=ds_grid[var],
-                    axis="Z",
-                    target=z_kwargs["target"],
-                    target_data=target_data,
-                    method=method,
-                    mask_edges=z_kwargs["mask_edges"],
-                    bypass_checks=z_kwargs["bypass_checks"],
-                    suffix=z_kwargs["suffix"],
-                )
-                ds_out[var] = da_grid
+                if var in ds_grid:
+                    da_grid = xgrid.transform(
+                        da=ds_grid[var],
+                        axis="Z",
+                        target=z_kwargs["target"],
+                        target_data=target_data,
+                        method=method,
+                        mask_edges=z_kwargs["mask_edges"],
+                        bypass_checks=z_kwargs["bypass_checks"],
+                        suffix=z_kwargs["suffix"],
+                    )
+                    ds_out[var] = da_grid
+                else:
+                    warnings.warn(f"{var} not in supplied dataset, skipping.")
         elif z_kwargs["variable"] == "all":
             for var in ds_grid:
                 try:
@@ -240,17 +248,20 @@ class GRID:
                     print(f"Skipping '{var}' because:")
                     print(e)
         else:
-            da_grid = xgrid.transform(
-                da=ds_grid[z_kwargs["variable"]],
-                axis="Z",
-                target=z_kwargs["target"],
-                target_data=target_data,
-                method=method,
-                mask_edges=z_kwargs["mask_edges"],
-                bypass_checks=z_kwargs["bypass_checks"],
-                suffix=z_kwargs["suffix"],
-            )
-            ds_out[z_kwargs["variable"]] = da_grid
+            if z_kwargs["variable"] in ds_grid:
+                da_grid = xgrid.transform(
+                    da=ds_grid[z_kwargs["variable"]],
+                    axis="Z",
+                    target=z_kwargs["target"],
+                    target_data=target_data,
+                    method=method,
+                    mask_edges=z_kwargs["mask_edges"],
+                    bypass_checks=z_kwargs["bypass_checks"],
+                    suffix=z_kwargs["suffix"],
+                )
+                ds_out[z_kwargs["variable"]] = da_grid
+            else:
+                raise Exception(f"{var} not in supplied dataset.")
         return ds_out
 
     def __init__(

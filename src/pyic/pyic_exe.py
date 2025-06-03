@@ -28,7 +28,6 @@ def main():
         ds_lon_name="glamt",
         ds_lat_name="gphit",
         ds_time_counter="time",
-        ds_z_name="z",
     )
     grid2 = GRID(
         data_filename=args.destination,

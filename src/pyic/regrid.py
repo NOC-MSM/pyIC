@@ -50,6 +50,14 @@ def subset_mask(source_grid, destination_grid, return_masks=False):
         return subset_lon_bool, subset_lat_bool
 
 
+def reduce_dims(mask, grid):
+    dims_to_drop = {}
+    for dim in mask.dims:
+        if dim not in grid.dims:
+            dims_to_drop[dim] = 0
+    return mask.isel(dims_to_drop)
+
+
 def make_subset(source_grid, subset_lon_bool=None, subset_lat_bool=None):
     """Create a subset of the source grid based on the provided longitude and latitude masks.
 
@@ -204,7 +212,14 @@ def make_regridder(
     if landsea_mask is None:
         warnings.warn("landsea_mask is None. You may experience data interpolated over land.")
     else:
-        source_grid.inset["mask"] = source_grid.inset[landsea_mask]
+        if landsea_mask not in source_grid.inset:
+            raise Exception(f"Land-Sea mask variable, {landsea_mask}, not in dataset.")
+        if source_grid.inset["lon"].ndim < source_grid.inset[landsea_mask].ndim:
+            source_grid.inset["mask"] = reduce_dims(source_grid.inset[landsea_mask], source_grid.inset["lon"])
+        elif source_grid.inset["lon"].ndim > source_grid.inset[landsea_mask].ndim:
+            raise Exception("landsea mask and lat/lon grid not same shape.")
+        else:
+            source_grid.inset["mask"] = source_grid.inset[landsea_mask]
     # Create a regridder object using xesmf
     regridder = xe.Regridder(
         ds_in=source_grid.inset,  # Input dataset (subset of the source grid)
@@ -344,7 +359,7 @@ def regrid_data(
     If no regridder provided then one is made using the dest_grid.
 
     Args:
-        source_data (GRID): The source data instance.
+        source_data (/path/to/ds/, xr.Dataset or GRID): The source data instance.
         dest_grid (GRID, optional): The destination grid instance.
         regridder (xesmf.Regridder, optional): The regridder object to use.
         regrid_vertically (bool,optional): whether to regrid vertically
@@ -367,6 +382,10 @@ def regrid_data(
             )  # Raise an error if neither is provided
     if type(source_data) is str:
         source_data = xr.open_dataset(source_data)
+    elif hasattr(source_data, "ds"):
+        source_data = source_data.ds
+    elif type(source_data) is not xr.Dataset:
+        raise Exception(f"Source dataset should be /path/to/ds, GRID or xr dataset, not {type(source_data)}.")
     # Use the regridder to transform the inset data to the destination grid
     dest_data = regridder(source_data)
     if dest_grid_mask is not None:

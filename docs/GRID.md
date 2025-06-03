@@ -21,3 +21,7 @@ You should provide one of `data_filename` or `dataset` for reasons that should b
 ## Vertical regridding
 
 This is still under construction but uses [xgcm's regridding tool](https://xgcm.readthedocs.io/en/latest/transform.html). You may decide to regrid your data vertically first, and then create a pyIC GRID object, either by saving to a netCDF, or using the generated `xarray` Dataset as an input to the pyIC grid class.
+
+Vertical regridding is carried out if `convert_to_z_grid` option is set to `True` when creating a `GRID` class. Arguments for regridding are passed using the `z_kwargs` argument, as a dictionary. Most of these are as in the `xgcm` documentation.
+
+For selecting which variables to regrid, pass an individual variable name (such as `{'variable':'so'}`), a list of variables to regrid (such as `{'variable':['so','thetao']}`) or "all" for all variables to be regridded (`{'variable':'all'}`).

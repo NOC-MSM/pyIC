@@ -9,14 +9,28 @@ dst_dom_path = "/gws/nopw/j04/jmmp/public/pyIC/dst_domain_cfg.nc"  # likewise
 src_data_path = "/gws/nopw/j04/jmmp/public/pyIC/src_data.nc"
 
 src_grid = grid.GRID(
-    src_dom_path, ds_lon_name="nav_lon", ds_lat_name="nav_lat", ds_time_counter="time_counter"
+    src_dom_path,
+    ds_lon_name="nav_lon",
+    ds_lat_name="nav_lat",
+    ds_z_name="nav_lev",
+    ds_time_counter="time_counter",
 )
 
-src_data = grid.GRID(
-    src_data_path, ds_lon_name="nav_lon", ds_lat_name="nav_lat", ds_time_counter="time_counter"
-)
+# src_data = grid.GRID(
+#    src_data_path,
+#    ds_lon_name="nav_lon",
+#    ds_lat_name="nav_lat",
+#    ds_z_name="deptht",
+#    ds_time_counter="time_counter",
+# )
 
-dst_grid = grid.GRID(dst_dom_path, ds_lon_name="glamt", ds_lat_name="gphit", ds_time_counter="time_counter")
+dst_grid = grid.GRID(
+    dst_dom_path,
+    ds_lon_name="glamt",
+    ds_lat_name="gphit",
+    ds_z_name="nav_lev",
+    ds_time_counter="time_counter",
+)
 
 
 regrid1 = regrid.make_regridder(
@@ -24,9 +38,10 @@ regrid1 = regrid.make_regridder(
     dst_grid,
     regrid_algorithm="bilinear",
     save_weights="~/NCMRWF/NEMO-regrid_weights_bilinear.nc",
+    landsea_mask="tmask",
     use_inset=False,
     parallel=False,
 )
 
-regridded_T = regrid.regrid_data(src_data, regridder=regrid1)
-regridded_T.to_netcdf("/gws/nopw/j04/wcssp_india/users/jdconey/regridder_src_data_20250120.nc")
+regridded_T = regrid.regrid_data(src_data_path, regridder=regrid1)
+regridded_T.to_netcdf("/gws/nopw/j04/wcssp_india/users/jdconey/regridder_src_data_20250603.nc")
